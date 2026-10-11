@@ -67,31 +67,29 @@ The [demo ranking](analytics/queries/demo_protein_value.sql) is deliberately sep
 
 ## Architecture
 
-Two kinds of information are intentionally kept apart: **retail products and their price observations** versus **generic reference foods and nutrient measurements**.
+The **public, runnable architecture** is deliberately smaller than private development: synthetic retail prices and synthetic generic reference nutrition are stored separately. A demo calculation does not qualify an item for the verified ranking.
 
 ~~~mermaid
 flowchart LR
-    Seed["Synthetic data<br/>build_demo.py"] --> DB[("SQLite demo database")]
-    DB --> Retail["Products + stores<br/>nutrition + demo prices"]
-    DB --> Reference["Reference foods<br/>+ nutrients"]
+    Seed["Synthetic fixtures<br/>build_demo.py"] --> DB[("SQLite demo database")]
+    DB --> Retail["Retail products<br/>nutrition and demo prices"]
+    DB --> Reference["Generic reference foods<br/>and nutrients"]
 
-    Retail --> Demo["Demo value ranking<br/>NOK / 25 g protein"]
-    Retail --> Gate{"Independently verified<br/>and currently valid?"}
-    Gate -->|"No qualifying rows"| Empty["Verified ranking<br/>0 results"]
+    Retail --> Demo["Demo price / protein ranking"]
+    Retail --> Gate{"Independently checked real price<br/>and matching product evidence?"}
+    Gate -->|"No qualifying records"| Empty["Verified ranking<br/>zero rows"]
+    Reference --> Nutrition["Nutrition coverage, density<br/>portions and group reports"]
 
-    Reference --> Nutrition["Coverage · density<br/>portions · groups"]
-
-    Demo --> Reports["run_reports.py"]
-    Empty --> Reports
-    Nutrition --> Reports
-
-    Tests["unittest: six tests"] -.-> DB
-    Tests -.-> Reports
+    Demo --> CLI["run_reports.py"]
+    Empty --> CLI
+    Nutrition --> CLI
+    Tests["Six offline unit tests"] -.-> DB
+    Tests -.-> CLI
 ~~~
 
 The retail side uses **stores**, **products**, **nutrition_profiles** and **price_observations**. The reference side uses snapshot-aware **mvt_snapshots**, **mvt_food_groups**, **mvt_foods** and **mvt_food_nutrients**.
 
-There is **no automatic join by food name** between reference nutrition and retail products. An exact match would require separately reviewed SKU/EAN identity, measurement basis, edible mass, location and date evidence.
+There is **no automatic join by food name** between reference nutrition and retail products. A real match needs independently reviewed SKU/EAN identity, exact variant, nutritional measurement basis, edible mass, locality and dated price evidence. The public database holds only synthetic examples; it contains **no real retailer offers or privately collected source records**.
 
 ## SQL portfolio
 
@@ -123,20 +121,50 @@ The verified-value query filters by explicit verification status, matching as-so
 
 ## Private development snapshot (11 October 2026)
 
-The larger **private** codebase has progressed beyond the public synthetic example. These are private-local milestones or bounded experiments, **not features runnable from this repository**.
+The larger **private** codebase has progressed beyond this runnable public extract. Items below describe local/private milestones or explicitly planned work. **Private code and captured data are not automatically mirrored here.**
 
-| Workstream | Private progress | Important limit |
+| Workstream | Private status | Limit |
 | --- | --- | --- |
-| Norwegian nutrition reference | Imported **2,121 Matvaretabellen foods, 57 nutrients and 120,197 nutrient measurements** into local SQLite. | Generic foods are not identified retail SKUs. |
-| Retailer and provider intake | Staged review-only observations from **KIWI, REMA 1000, Coop Prix, MENY and Kassalapp**; tested bounded HTML/PDF/source pilots. | Source-only observations are not independently checked local shelf prices or reusable public datasets. |
-| Exact-product nutrition review | Reviewed **four private manufacturer/SKU nutrition records** (one `verified`, three `verified_with_warning` on the nutrition-review dimension). | **All associated price evidence remains `source_only`.** Nutrition review does not verify retailer prices. |
-| Food roles | Curated **35 general food categories** and contextual substitutions for later recipe planning, with review-gated reference-food suggestions. | No automatic branded-product match or cost-optimized meal plan. |
-| Evidence reconciliation | Added an initial **offline, read-only cross-source exception and field-conflict foundation** to private main. | It is an early foundation, not an accepted multi-store price verification pipeline. |
-| Small retailer advisory experiment | A separate **unmerged private feature branch** explores five REMA product candidates and clearly indicative protein costs. | No independently verified weekly price, eligible live offer ranking or finished advisor. |
+| Official Norwegian reference nutrition | Locally imported **2,121 Matvaretabellen foods, 57 nutrients and 120,197 nutrient measurements** into SQLite. | Reference-food IDs are not retail SKU/EAN identities. |
+| Retailer and provider evidence | Bounded **KIWI, REMA 1000, Coop Prix, MENY and Kassalapp** HTML, PDF and API pilots; source-only observations and dated history staged privately. | Advertised/provider observations are **not verified current local shelf prices** or a redistributable public dataset. |
+| Exact manufacturer nutrition | Four private SKU/manufacturer nutrition reviews: one `verified`, three `verified_with_warning` **for identity/nutrition only**. | All associated price evidence remains `source_only`. |
+| Source-family reconciliation | **Merged on private main:** offline, read-only exception/field-conflict foundation for bounded KIWI/REMA evidence, including safeguards against counting mirrored upstream assertions as independent corroboration. | Candidate matches and calculated unit rates do **not** verify products, nutrition or prices; broader real-food review remains open. |
+| Food roles | Curated **35 general food categories** and contextual/partial substitutions with review-gated reference-food suggestions. | No cost-optimized meal plan or automatic product match. |
+| Small advisory experiment | A separate **unmerged private experiment** explores five REMA cards and clearly *indicative* protein costs. | Not a complete weekly catalogue, deployed advisor or verified comparison. |
+| Scoped weekly-offer direction | A **nine-chain** Norwegian retailer scope is selected. Limited **personal-use Tjek API access is owner-reported**, with a small bounded proof of retrieval outside this repo. | The exact access/reuse terms still require checking. **No Tjek collector, ongoing refresh or Tjek payload** is in either published demo or private main. |
+| Collection and price-history deployment | **Planned:** rights-approved weekly collection, immutable private offer history, and optional Google Cloud Scheduler → Cloud Run Job → private Cloud Storage; local SQLite replay stays available. | **No NutriValue cloud service, weekly job, stored Tjek history or historical offer chart has been deployed.** |
 
-The planned early product will keep **two evidence lanes** separate: an **indicative advisory view** (dated, attributed, potentially approximate nutrition and explicitly non-verified prices) and a much stricter **verified price/protein comparison**. Neither lane is implemented in this public repository. The current public verified-price report intentionally returns zero results.
+### Evidence architecture: implemented private foundation vs. planned product
 
-**Still not implemented:** a verified current-store price + exact SKU nutrition ranking, deployed dashboard, automatic basket optimizer, full three-/four-day meal planning or Mealie synchronization. The public repo does **not** redistribute provider responses, private snapshots, purchased-product evidence or licensed nutrition datasets. For further scope and maturity details, see the [development snapshot](docs/DEVELOPMENT_SNAPSHOT.md).
+Dashed arrows represent **future integrations**, not running workflows. This is an explanatory view of the private direction; it is **not the runtime graph of this public demo**.
+
+~~~mermaid
+flowchart TB
+    subgraph Existing["Private local/offline foundation — implemented"]
+        RetailSources["KIWI, REMA, Coop Prix, MENY<br/>and Kassalapp source-only pilots"] --> Stage["Private attributed snapshots<br/>and source-only staging"]
+        MVT["Matvaretabellen import"] --> Generic["Separate generic<br/>nutrition reference"]
+        Stage --> Reconcile["Offline source-family<br/>conflicts and exception review"]
+        Reconcile --> Candidates["Unverified product and<br/>price candidates"]
+        Manufacturer["Four reviewed manufacturer<br/>SKU / nutrition records"] --> Candidates
+        Candidates --> Strict{"Exact identity, edible mass<br/>and independently checked store/date price?"}
+        Strict -->|"No qualifying store-price evidence"| None["Verified retail value ranking<br/>still empty"]
+    end
+
+    subgraph Roadmap["Planned — not deployed"]
+        Licensed["Permission-gated offer feed<br/>personal-use scope only"] -.-> Batch["Weekly Cloud Scheduler<br/>and Cloud Run Job"]
+        Batch -.-> Archive["Private Cloud Storage<br/>offer history + local replay"]
+        Archive -.-> Stage
+        Stage -.-> Advisory["Indicative price/protein<br/>with visible uncertainty"]
+        Advisory -.-> Dashboard["Local-first review dashboard"]
+        Generic -.-> Dashboard
+        Dashboard -.-> Meals["Recipes + inventory<br/>three- and four-day planning"]
+        Meals -.-> Mealie["User-approved<br/>Mealie shopping and calendar sync"]
+    end
+~~~
+
+The planned product keeps **two separate evidence lanes**: an **indicative advisory view** for dated, attributed but unverified observations, and a stricter **verified price/protein comparison** that requires independently checked exact-product and store/date evidence. Neither lane is deployed in the public portfolio. Historical advertised-offer prices, if lawfully collected, would be labeled separately from independently verified shelf or receipt prices.
+
+**Still not implemented:** a verified current-store price + exact SKU nutrition ranking, NutriValue dashboard, automatic basket optimizer, three-/four-day meal planning, cloud collector, Tjek integration or Mealie synchronization. No provider responses, private snapshots, personal location, purchasing evidence or licensed bulk nutrition data are published. See the [development snapshot](docs/DEVELOPMENT_SNAPSHOT.md) for evidence boundaries and the [product roadmap](docs/PRODUCT_VISION.md) for future milestones.
 
 ## Repository map
 
@@ -157,19 +185,19 @@ LICENSE                       MIT License
 
 ## Project status
 
-**Active WIP.** The broader goal is a local-first, nutrition-aware Grocery OS for Norway. The public code is a small, tested SQL demo, **not** a completed shopping or meal-planning application. The near-term private direction is a **one-retailer, advisory-first pilot** with indicative values clearly separated from verified evidence. The [Product Vision & Roadmap](docs/PRODUCT_VISION.md) describes planned milestones, dashboard and mobile integration without treating them as shipped features.
+**Active WIP.** This public repository remains a **synthetic, tested SQL/Python portfolio**. The private project now has an offline evidence-reconciliation foundation and a more specific retailer/source strategy, but it has not shipped a live price comparison or Grocery OS.
 
 ## Next steps
 
-1. Validate a small, dated **single-retailer advisory** workflow, showing source-only prices and approximate nutrition with visible uncertainty; do not imply verified weekly offers.
-2. Extend read-only field-level reconciliation with upstream-source independence, identity checks and an explicit conflict/review queue.
-3. Require separately reviewed exact SKU, edible mass, nutrition basis, store, timestamp and offer conditions before any **verified** real-world NOK/protein ranking.
-4. Build a truthful local-first review dashboard once candidate and verification statuses can be displayed reliably.
-5. Later add recipe, inventory and budget constraints for the three-/four-day planning cycle, followed by user-approved Mealie handoff.
+1. **Rights and scope:** confirm the narrow personal-use source permissions and test a reproducible offline-first offer import without redistributing or silently promoting provider data.
+2. **Evidence review:** investigate five concrete private source-only candidates using the new conflict/exception foundation, preserving original source-family lineage and unresolved questions.
+3. **Advisory MVP:** test a handful of dated single-retailer cards with explicitly indicative nutrition/cost assumptions; do not present them as verified deals.
+4. **Strict verification:** establish independently checked store/date prices, exact branded product identity, measurement basis and edible package mass before real NOK/protein rankings.
+5. **Future product:** only then extend to an honest local dashboard, historical-offer analytics, recipe/inventory planning and user-approved Mealie handoff. A weekly Google Cloud archive job is an **optional deployment plan**, not an active pipeline.
 
 ## Attribution and development approach
 
-The private project uses [Matvaretabellen / Mattilsynet](https://www.matvaretabellen.no/en/api/) as a Norwegian nutrition reference and has explored first-party KIWI, REMA 1000, Coop Prix and MENY offers alongside Kassalapp product/price information. **No licensed source datasets, captured responses, private accounts, API keys or personal purchasing history are included in this public repository.**
+The private project uses [Matvaretabellen / Mattilsynet](https://www.matvaretabellen.no/en/api/) for Norwegian reference nutrition and has explored first-party KIWI, REMA 1000, Coop Prix and MENY offers alongside Kassalapp data. A restricted, owner-reported personal-use Tjek access path is **only a candidate for future private ingestion**, not a public data license or running adapter. **No proprietary source datasets, Tjek payloads, captured provider responses, private accounts, API keys, precise shopping location or personal purchasing history are included here.**
 
 The work uses substantial **AI-assisted development** together with manually directed problem definition, review, testing and implementation decisions. It is a practical demonstration of foundational SQL and analytical thinking, not a claim of previous professional product-analytics employment.
 

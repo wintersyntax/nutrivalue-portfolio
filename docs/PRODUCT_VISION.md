@@ -10,7 +10,7 @@
 
 The starting point is straightforward: compare **NOK per 25 g protein** using actual edible package mass and credible nutrition data. The broader goal is not to create another generic grocery-price comparison site. It is to turn trustworthy prices, nutrition, recipes, available ingredients and preferences into **explainable shopping decisions**.
 
-**Principle: correct and attributable beats broad and impressive.** An unknown price, mismatched food form or unverified retail product should remain visibly uncertain, not quietly enter a ranking. A useful **indicative** comparison can be shown with explicit limitations; it must never be mislabeled a **verified** current-store offer.
+**Principle: correct and attributable beats broad and impressive.** An unknown price, mismatched food form or unverified retail product should remain visibly uncertain, not quietly enter a ranking. A useful **indicative** comparison can be shown with explicit limitations; it must never be mislabeled a **verified** current-store offer. The initial private shopping scope is **nine Norwegian retailer chains** rather than a nationwide catalogue; no home proximity, individual-store availability or local price verification is disclosed or implied here.
 
 ## Target experience (not implemented)
 
@@ -32,20 +32,34 @@ These lanes separate **useful but uncertain advice** from **audited price compar
 
 ## Intended architecture
 
-The flow below is a **target design**; most boxes do not exist in this public portfolio repository.
+This diagram **distinguishes the existing private offline foundation from planned components**. Dashed edges represent future wiring. The public repository does **not** run this pipeline; its smaller synthetic demo is shown in the [README](../README.md#architecture).
 
 ~~~mermaid
 flowchart TB
-    Sources["Permitted price observations<br/>+ nutrition references"] --> Review["Identity, provenance<br/>and measurement review"]
-    Review --> Engine["NutriValue<br/>Python + SQLite + SQL"]
-    Recipes["Recipes · inventory<br/>preferences · goals"] --> Engine
-    Engine --> Cockpit["Planned local-first dashboard<br/>evidence · rankings · proposals"]
-    Cockpit --> Approval{"Explicit user approval"}
-    Approval -->|"Approved"| Export["Shopping and meal-plan export"]
-    Export --> Mealie["Planned Mealie integration<br/>calendar + shopping list"]
-    Export --> Offline["Markdown / JSON / CSV<br/>fallback"]
-    Approval -->|"Needs changes"| Review
+    subgraph Foundation["Private local foundation — bounded implementation"]
+        Retail["Retailer and Kassalapp<br/>source-only observations"] --> Staging["Attributed private staging<br/>with dated snapshots"]
+        Nutrition["Matvaretabellen<br/>generic reference nutrition"] --> Ref["Separate reference-food records"]
+        Staging --> Reconcile["Read-only identity hints<br/>source-family conflict review"]
+        Reconcile --> Eligibility{"Independently reviewed exact product<br/>and store/date price?"}
+        Eligibility -->|"Not yet"| Hold["Review queue<br/>no verified retail rankings"]
+    end
+
+    subgraph Future["Planned — not deployed"]
+        Feed["Permission-gated<br/>weekly offer feed"] -.-> Scheduler["Cloud Scheduler<br/>Cloud Run Job"]
+        Scheduler -.-> History["Private Cloud Storage<br/>immutable offer history"]
+        History -.-> Staging
+        Staging -.-> Indicative["Indicative candidate costs<br/>with uncertainty"]
+        Indicative -.-> Cockpit["Local-first NutriValue<br/>review dashboard"]
+        Ref -.-> Cockpit
+        Cockpit -.-> Planner["Recipes, inventory, budget<br/>3 + 4-day meal plans"]
+        Planner -.-> Approval{"User approval"}
+        Approval -.->|"Approved"| Export["Selected shopping/calendar export"]
+        Export -.-> Mealie["Mealie PWA<br/>planned mobile companion"]
+        Export -.-> Offline["Markdown / JSON / CSV<br/>offline fallback"]
+    end
 ~~~
+
+**Important boundaries:** manufacturer nutrition review is not store-price verification; unrelated sites copying one upstream source do not count as independent corroboration. The future weekly offer archive is a **source-only history**, while strict verified-price comparisons remain empty.
 
 ### Technical boundaries
 
@@ -55,6 +69,8 @@ flowchart TB
 - **Mealie:** selected *future* companion for recipes, meal calendars and checkable shopping lists, **not** the source of pricing or nutritional truth.
 - **PikaPods:** selected prospective hosting option **for Mealie only**; no deployment or paid hosting is claimed. The NutriValue engine and its dashboard are not planned to be hosted there by default.
 - **Provider independence:** export to local Markdown/JSON/CSV is the planned fallback. AnyList could be considered only with a verified supported integration.
+- **Weekly offers:** a narrowly scoped, rights-approved **once-weekly** collection and private historical snapshots are the future direction; the owner reports restricted Tjek personal-use access, **not verified redistribution rights**, and no collector is installed.
+- **Cloud infrastructure:** optional future Google Cloud Scheduler → Cloud Run Job → private Cloud Storage for weekly collection; local Python/SQLite replay remains available. **No NutriValue cloud job, bucket, scheduler or historical-offer chart exists yet.**
 
 ## Roadmap and evidence gates
 
@@ -65,8 +81,9 @@ flowchart TB
 | **Verified inputs** | Connect exact SKU/EAN, edible mass, branded nutrition basis, observed price, date and store | A small number of independently reviewed, auditable end-to-end matches |
 | **SQL portfolio** | Explainable nutritional analyses, documented limitations and reproducible examples | Inspectable SQL and fixtures; findings are labeled by evidence quality |
 | **Early dashboard** | Local read-only view of data coverage, freshness, review queues and eligible comparisons | A tested interface that exposes uncertainty rather than inventing rankings |
-| **Weekly deals** | Compare permitted, date- and location-aware current offers | Source permissions, extraction tests and independently checked offer conditions |
-| **Shopping intelligence** | Recipes, price history, inventory, budget and three-/four-day planning | Explainable constraints and tested selection/quantity calculations |
+| **Weekly deals** | Assess permitted nine-chain, date-aware advertised offers and store-specific availability limits | Confirm exact rights, test bounded offline imports, keep **source-only** offer facts distinct from verified store prices |
+| **Offer history** | Preserve authorized weekly source-only offer snapshots and later compare like-for-like products | Legal retention permission, immutable revisions, missing-week flags; advertised trends are not verified shelf-price trends |
+| **Shopping intelligence** | Recipes, reviewed price evidence, inventory, budget and three-/four-day planning | Explainable constraints and tested selection/quantity calculations |
 | **Mobile handoff** | User-approved meal calendar and shopping-list sync | Tested API behavior, non-destructive updates, recovery, backups and offline export |
 
 Phases are **direction**, not a release schedule or list of shipped functionality. The immediate direction is a limited, clearly **indicative** one-retailer advisory experiment; a genuine **verified** NOK/protein comparison still requires high-confidence matching of real store/date price, portion and nutrition evidence.
@@ -88,7 +105,8 @@ See [README](../README.md) for the quick start and links to the actual code.
 - Source-only/review-only collection experiments now cover **KIWI, REMA 1000, Coop Prix, MENY and Kassalapp**, including bounded public-page and offline PDF pilots. These inputs are not verified current shelf prices and are not republished in this repo.
 - **Four private manufacturer/SKU nutrition records** were reviewed, but their associated price evidence remains **source-only**.
 - A **35-category food-role vocabulary** and review-gated contextual substitutions support future meal-choice reasoning; there is no automatic SKU-to-reference match.
-- An initial **offline evidence-reconciliation/exception-queue foundation** is on private main, with acceptance and real-world coverage limitations. A separate, **unmerged five-card REMA advisory experiment** explores indicative candidate protein costs.
+- The **offline evidence-reconciliation/exception-queue foundation** is merged on private main (PR #40), but remains candidate-only and limited in real-world scope. A separate, **unmerged five-card REMA advisory experiment** explores indicative candidate protein costs.
+- A private nine-chain scope, reported limited Tjek personal-use access and a future weekly private Google Cloud archive have been selected. **No Tjek adapter, scheduled ingestion, deployed infrastructure or actual price-history visualization exists.**
 
 **Not yet achieved:** an independently verified local retail price and nutrition ranking, a deployed dashboard, current weekly optimized baskets, completed meal plans or Mealie synchronization. See the [development snapshot](DEVELOPMENT_SNAPSHOT.md) for the distinction between private progress and what the public demo actually runs.
 
