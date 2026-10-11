@@ -1,6 +1,6 @@
 # NutriValue — development snapshot
 
-**As of 11 October 2026 · Status: active WIP**
+**As of 12 October 2026 · Status: active WIP**
 
 This document describes publicly shareable **progress in a larger private NutriValue project**. It is not a claim that the code, data or user interface described below ships in this portfolio repository. The [README](../README.md) explains how to run the **synthetic public SQL demo**.
 
@@ -15,21 +15,24 @@ This document describes publicly shareable **progress in a larger private NutriV
 | Product identity and nutrition | No real retail SKU joins | Four privately reviewed manufacturer/SKU nutrition records; retailer prices **not verified** |
 | Food selection | No planner | Curated 35-category role vocabulary, with contextual substitutions and review gates |
 | Reconciliation | No deployed multi-source pipeline | **Merged private-main** offline exception/field-conflict foundation; candidate-only outputs with limited retailer coverage |
-| Weekly offer scope / historical data | No real offer history or scheduled collection | Nine Norwegian retailer chains selected; restricted personal-use Tjek access reported, pending terms review; weekly private offer-history archive and Google Cloud execution **planned** only |
+| Weekly offer scope / historical data | No Tjek or real-offer data, ongoing collection or history in public demo | Nine-chain strategy; owner-reported limited personal-use access. Cloud batch, weekly history and charts remain **planned only**. |
+| Tjek offline snapshot processing | **Not included** in the public portfolio | Private-main TASK-023 / PR #43: saved JSON or `.ndjson.gz` import, nine-chain allowlist, private immutable `source_only` SQLite snapshots; 18 focused synthetic tests and a three-offer REMA local replay. **No network fetching.** |
 | Interface / shopping | No dashboard, service or mobile integration | A local dashboard, 3+4-day planning and Mealie handoff remain **planned**, not shipped |
 
 Counts describe specific local reference imports or scoped reviews; they are **not live catalogue coverage, current prices, or public API availability**.
 
 ## What changed since the first public extract
 
-The initial public demo was created on **10 October 2026** to make foundational SQL and Python work reproducible without private provider data. Work recorded in private development on **11 October** expanded the evidence-oriented approach:
+The initial public demo was created on **10 October 2026** to make foundational SQL and Python work reproducible without private provider data. Work recorded in private development on **11–12 October** expanded the evidence-oriented approach:
 
 1. **Retail source coverage.** Bounded first-party HTML, locked-price and PDF extraction pilots investigate price, pack-size, campaign and date evidence from several Norwegian stores. Parsing a displayed offer creates a candidate, **not** a verified shelf price, legally redistributable dataset or guaranteed active promotion.
 2. **SKU/manufacturer nutrition review.** A narrowly scoped private pilot reviewed four manufacturer-linked product/nutrition records (one marked `verified`, three `verified_with_warning` **for the nutrition-review dimension**). The associated retail-price dimension remains `source_only`; these cannot enter a verified NOK/protein ranking.
 3. **Explainable meal roles.** Thirty-five generic ingredient categories and directional/partial substitutions help explain which foods could serve similar recipe purposes. Suggestions from generic reference nutrition require explicit review before being treated as approved associations.
 4. **Cross-source evidence foundation.** Private PR #40 merged the read-only exception/field-conflict foundation into main. It compares bounded staged evidence and avoids double-counting mirrored source families; it does **not** establish independent local-price verification or approve any real retailer ranking.
 5. **A smaller advisory MVP experiment.** An **unmerged private feature branch** explores five REMA card candidates with **indicative** price/protein estimates. It is deliberately not a complete current-week catalogue, verified local offer ranking or finished meal planner. No part of that branch is claimed as shipped in the public demo.
-6. **Scoped weekly intake direction.** A later private planning update selected nine Norwegian retailer *chains* (not a claim of verified physical-store coverage). The owner reports limited personal-use Tjek API permission and a bounded three-offer probe outside the repo, but the exact rights wording has not been checked. A weekly immutable private offer archive, local offline replay and an optional **Cloud Scheduler → Cloud Run Job → private Cloud Storage** arrangement are **future designs**, not jobs or price-history reports that currently run.
+6. **Scoped weekly intake direction.** A later private planning update selected nine Norwegian retailer *chains* (not a claim of verified physical-store coverage). The owner reports limited personal-use Tjek API permission and a bounded three-offer probe outside the repo, but the exact rights wording has not been checked. A scheduled weekly private offer archive and an optional **Cloud Scheduler → Cloud Run Job → private Cloud Storage** arrangement remain **future designs**, not jobs or price-history reports that currently run. The subsequently merged offline saved-file importer is described in item 7.
+
+7. **Offline Tjek input staging (TASK-023, private PR #43).** Private main now supports parsing **previously saved** JSON and upstream-format compressed NDJSON snapshots for nine selected chain identifiers, with append-only source-only SQLite records, original payload hashes, explicit dates, package/multibuy/deposit flags and unit-price checks. Eighteen focused synthetic tests cover the adapter. A three-offer REMA sample from one catalogue was reviewed locally for field integrity, arithmetic and idempotent replay. **This is not live nine-chain coverage, licensed redistribution, independent shelf-price proof or a network/cloud collector.** No source payloads or account details enter the public repo.
 
 ## Evidence labels that matter
 
@@ -48,7 +51,7 @@ A store label is not proof of store-specific stock. A saved page's retrieval tim
 
 The first practical advisor is intended to be **small, single-retailer and explicit about uncertainty**: show a few dated grocery candidates, source/conditions, package sizes where known, approximate kcal/protein values where defensible, and indicative cost. This is a *planned product lane*, separate from a stricter **verified comparison lane** that remains empty until independently checked store/date and product/nutrition evidence exists.
 
-Alongside this, source permissions and a small offline-first weekly offer-history workflow need validation before any scheduled requests. Advertised offer histories would be source-only, not verified shelf-price trends, and previous snapshots would be retained privately only when permitted. **No NutriValue Google Cloud resources, Tjek collector, historical price chart or routine offer refresh exists yet.** After evidence review, the path is a truthful local-first dashboard; recipe and inventory constraints for three- and four-day cooking blocks; and an **explicitly user-approved** shopping-list/meal-calendar handoff to Mealie. None is presented as live today. The [product roadmap](PRODUCT_VISION.md) distinguishes the goals from the accepted public demo.
+Alongside this, exact source permissions and any cloud or historical-retention rights must be checked before scheduled requests. The private saved-file Tjek importer supplies an offline staging foundation, not permission to call a provider or keep its data in the cloud. Advertised offer histories would be source-only, not verified shelf-price trends, and previous snapshots would be retained privately only when permitted. **No NutriValue Google Cloud resources, Tjek network collector, historical price chart or routine offer refresh exists yet.** After evidence review, the path is a truthful local-first dashboard; recipe and inventory constraints for three- and four-day cooking blocks; and an **explicitly user-approved** shopping-list/meal-calendar handoff to Mealie. None is presented as live today. The [product roadmap](PRODUCT_VISION.md) distinguishes the goals from the accepted public demo.
 
 ## Publication boundary
 

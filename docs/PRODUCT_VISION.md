@@ -39,6 +39,7 @@ flowchart TB
     subgraph Foundation["Private local foundation — bounded implementation"]
         Retail["Retailer and Kassalapp<br/>source-only observations"] --> Staging["Attributed private staging<br/>with dated snapshots"]
         Nutrition["Matvaretabellen<br/>generic reference nutrition"] --> Ref["Separate reference-food records"]
+        SavedTjek["Previously saved Tjek files<br/>offline only"] --> TjekStaging["Private append-only source-only<br/>Tjek snapshots"]
         Staging --> Reconcile["Read-only identity hints<br/>source-family conflict review"]
         Reconcile --> Eligibility{"Independently reviewed exact product<br/>and store/date price?"}
         Eligibility -->|"Not yet"| Hold["Review queue<br/>no verified retail rankings"]
@@ -59,7 +60,7 @@ flowchart TB
     end
 ~~~
 
-**Important boundaries:** manufacturer nutrition review is not store-price verification; unrelated sites copying one upstream source do not count as independent corroboration. The future weekly offer archive is a **source-only history**, while strict verified-price comparisons remain empty.
+**Important boundaries:** manufacturer nutrition review is not store-price verification; unrelated sites copying one upstream source do not count as independent corroboration. The private offline Tjek saved-file staging is **source-only** and separate from a still-future weekly cloud archive. Any future weekly offer archive is a **source-only history**, while strict verified-price comparisons remain empty.
 
 ### Technical boundaries
 
@@ -69,7 +70,7 @@ flowchart TB
 - **Mealie:** selected *future* companion for recipes, meal calendars and checkable shopping lists, **not** the source of pricing or nutritional truth.
 - **PikaPods:** selected prospective hosting option **for Mealie only**; no deployment or paid hosting is claimed. The NutriValue engine and its dashboard are not planned to be hosted there by default.
 - **Provider independence:** export to local Markdown/JSON/CSV is the planned fallback. AnyList could be considered only with a verified supported integration.
-- **Weekly offers:** a narrowly scoped, rights-approved **once-weekly** collection and private historical snapshots are the future direction; the owner reports restricted Tjek personal-use access, **not verified redistribution rights**, and no collector is installed.
+- **Weekly offers:** a narrowly scoped, rights-approved **once-weekly** collection and private historical snapshots are the future direction; the owner reports restricted Tjek personal-use access, **not verified redistribution rights**. Private main has an **offline saved-file importer** (TASK-023) but no network collector, scheduled ingestion or publicly redistributable offer dataset.
 - **Cloud infrastructure:** optional future Google Cloud Scheduler → Cloud Run Job → private Cloud Storage for weekly collection; local Python/SQLite replay remains available. **No NutriValue cloud job, bucket, scheduler or historical-offer chart exists yet.**
 
 ## Roadmap and evidence gates
@@ -81,7 +82,7 @@ flowchart TB
 | **Verified inputs** | Connect exact SKU/EAN, edible mass, branded nutrition basis, observed price, date and store | A small number of independently reviewed, auditable end-to-end matches |
 | **SQL portfolio** | Explainable nutritional analyses, documented limitations and reproducible examples | Inspectable SQL and fixtures; findings are labeled by evidence quality |
 | **Early dashboard** | Local read-only view of data coverage, freshness, review queues and eligible comparisons | A tested interface that exposes uncertainty rather than inventing rankings |
-| **Weekly deals** | Assess permitted nine-chain, date-aware advertised offers and store-specific availability limits | Confirm exact rights, test bounded offline imports, keep **source-only** offer facts distinct from verified store prices |
+| **Weekly deals** | Assess permitted nine-chain, date-aware advertised offers and store-specific availability limits | Confirm exact rights, extend bounded *private* offline replays, keep **source-only** offer facts distinct from verified store prices |
 | **Offer history** | Preserve authorized weekly source-only offer snapshots and later compare like-for-like products | Legal retention permission, immutable revisions, missing-week flags; advertised trends are not verified shelf-price trends |
 | **Shopping intelligence** | Recipes, reviewed price evidence, inventory, budget and three-/four-day planning | Explainable constraints and tested selection/quantity calculations |
 | **Mobile handoff** | User-approved meal calendar and shopping-list sync | Tested API behavior, non-destructive updates, recovery, backups and offline export |
@@ -99,14 +100,15 @@ Phases are **direction**, not a release schedule or list of shipped functionalit
 
 See [README](../README.md) for the quick start and links to the actual code.
 
-### In private development (snapshot: 11 October 2026)
+### In private development (snapshot: 12 October 2026)
 
 - Norwegian Matvaretabellen reference nutrition imported to local SQLite: **2,121 foods, 57 nutrients and 120,197 measurements**.
 - Source-only/review-only collection experiments now cover **KIWI, REMA 1000, Coop Prix, MENY and Kassalapp**, including bounded public-page and offline PDF pilots. These inputs are not verified current shelf prices and are not republished in this repo.
 - **Four private manufacturer/SKU nutrition records** were reviewed, but their associated price evidence remains **source-only**.
 - A **35-category food-role vocabulary** and review-gated contextual substitutions support future meal-choice reasoning; there is no automatic SKU-to-reference match.
 - The **offline evidence-reconciliation/exception-queue foundation** is merged on private main (PR #40), but remains candidate-only and limited in real-world scope. A separate, **unmerged five-card REMA advisory experiment** explores indicative candidate protein costs.
-- A private nine-chain scope, reported limited Tjek personal-use access and a future weekly private Google Cloud archive have been selected. **No Tjek adapter, scheduled ingestion, deployed infrastructure or actual price-history visualization exists.**
+- A nine-chain private scope and limited owner-reported Tjek personal-use access have been selected. **TASK-023 / PR #43 implemented offline-only parsing of already-saved Tjek JSON/`.ndjson.gz` files**, immutable private `source_only` SQLite staging, 18 focused synthetic tests and a bounded three-offer REMA sample replay. This is not an online Tjek API integration, multi-chain live coverage or independently verified price data.
+- A future once-weekly private Google Cloud collection/archive remains **planned**, with access, storage/retention rights and cost checks still required. **No scheduled ingestion, deployed NutriValue infrastructure or actual price-history visualization exists.**
 
 **Not yet achieved:** an independently verified local retail price and nutrition ranking, a deployed dashboard, current weekly optimized baskets, completed meal plans or Mealie synchronization. See the [development snapshot](DEVELOPMENT_SNAPSHOT.md) for the distinction between private progress and what the public demo actually runs.
 
