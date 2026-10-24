@@ -1,0 +1,63 @@
+# Changelog
+
+Chronological engineering milestones through **23 October 2026**, recorded by implementation/merge date. The public portfolio was curated and reinitialized as an inspectable source snapshot on 23 October; older entries describe when engineering work was first performed, **not** separately replayed Git commits or product release dates.
+
+## 23 October 2026 — Public source release
+
+- Rebuild the public portfolio around **actual NutriValue code**: 62 engine source modules, 33 SQL files, 45 CLI scripts, 66 engineering test files, 32 OCR research programs/tests and the curated generic food-role reference.
+- Preserve the six-report, six-test **synthetic runnable demo**, entirely separate from provider and personal data.
+- Document the full data-to-decision architecture: source provenance, bounded collection, OCR/model extraction, offer interpretation, human review, weekly SQL, product/nutrition evidence and eligibility gates.
+- Publish the offer-review implementation and a detailed walkthrough of original-page evidence, two-model responses and **accept / reject / page-checked / skip** decisions.
+- Add a public-source tour, a limited offline privacy/release scanner and GitHub Actions for compilation, synthetic demo tests and selected portable engine contracts.
+- Rewrite README, development status and product vision as an **actual engineering portfolio**, without claiming a complete independent production runtime or working meal planner.
+- Keep branch history at one `Initialize` root commit as requested. **Branch reset is not a guarantee of GitHub object/cache deletion, and author metadata is separate.**
+
+## 22 October 2026 — Review service and operational resilience
+
+- **TASK-058:** Implemented the authenticated review-service approach, create-only decision objects and idempotent reviewer-decision replay.
+- **TASK-054:** Added a Mac-to-Google-Drive page-image copy/alert workflow.
+- **TASK-059:** Changed image transfer to avoid re-uploading unchanged page images and retain prior references.
+
+## 20 October 2026 — Promotion extraction and cloud orchestration
+
+- **TASK-053:** Implemented a bounded page-promotion model benchmark with structured outputs, source evidence and explicit cost accounting.
+- **TASK-056:** Hardened model routing, prompt/version validation, monitored page sets and safeguards.
+- **TASK-055:** Added page-image promotion extraction, independent model comparison, printed-promotion conditions, human review and corresponding analytics.
+- **TASK-024:** Developed a scheduled weekly cloud-job and private object-storage workflow. Owner-specific infrastructure assets are excluded from the public snapshot.
+
+## 19 October 2026 — Weekly catalogue history and REMA experiments
+
+- **TASK-051:** Recovered catalogue hotspot offers and bounded page-image capture, with hashes and coverage checks. A W43 run reported **883 selected source-only offers and 213 catalogue pages**, not verified checkout prices.
+- **TASK-052:** Added hash-validated append-only weekly SQLite imports with run identity, idempotence, coverage and cross-week queries.
+- **TASK-047 / TASK-049:** Preserved review-only REMA W40–W43 OCR/layout and historical price-plaque experiments. Printed-price accuracy remains insufficient for production.
+
+## 17 October 2026 — Norwegian offer classification
+
+- **TASK-041:** Expanded food categories, overlapping item tags, assortments, bundles and explicit unresolved statuses.
+- Reviewed 863 archived headings in a bounded classification exercise; 845 outcomes were supported by the chosen evidence and 18 remained unresolved. These figures are **not** independent accuracy or overall retail coverage measures.
+
+## 16 October 2026 — Identity and source conditions
+
+- Extended source-only Tjek campaign/standing-benefit interpretation, bounded secondary-evidence reviews and product-identifier diagnostics.
+- Strengthened GTIN validation and reviewed a limited five-card REMA reconciliation exercise.
+- Clarified boundaries for potential recipe/MCP integrations.
+
+## 15 October 2026 — Offline evidence and reproducibility
+
+- Added bounded nine-chain Tjek collection groundwork, a read-only offer preview, offline weekly evidence audits and CI/PR acceptance refinements.
+
+## 11–12 October 2026 — Retail and nutrition evidence pilots
+
+- Added offline saved Tjek JSON/NDJSON import and immutable source-only staging.
+- Extended KIWI/REMA/Coop/MENY/Kassalapp pilots, source-family reconciliation and a handful of reviewed manufacturer/SKU nutrition records.
+- Published the first small synthetic SQL/Python portfolio and documentation.
+
+## 10 October 2026 — Foundations
+
+- Built the normalized SQLite retail/nutrition schema, Decimal NOK-per-protein model, synthetic generator, six SQL reports and six deterministic offline tests.
+- Introduced a Matvaretabellen reference-food import, explicit nutrition measurement bases and evidence-gated verified-pricing rules.
+- Began building the generic food-role classification and explainable substitution vocabulary.
+
+---
+
+**Interpreting these entries:** Data source observations, nutrition reference measurements, human catalogue reviews, indicative calculations and independently checked retail prices are different evidence levels. Engineering dates do not establish source rights, source-completeness guarantees, accurate printed prices, healthy cloud deployment or live availability of store offers.
