@@ -15,7 +15,7 @@ NutriValue is a personal data-engineering and applied-AI project. It explores ho
 
 The engineering challenge is not just fetching prices. A catalogue may show a member discount, a multibuy offer, a previous price, a price per kilogram, an assortment badge, or incomplete OCR. Matvaretabellen may describe a generic food rather than the branded SKU being sold. NutriValue keeps these facts separate and makes uncertainty **visible** instead of silently manufacturing a convincing but unsupported result.
 
-**This is a code portfolio, not just a concept document.** The repository publishes a curated, substantial snapshot of actual Python, SQL, reviewer, OCR-research and test code alongside a small, offline, fully synthetic demo. Provider response bodies, copyrighted flyer images, personal datasets, real credentials and owner-specific infrastructure configuration are not published.
+**This is a code portfolio, not just a concept document.** The repository publishes a curated, substantial snapshot of actual Python, SQL, reviewer, OCR-research and test code alongside a small, offline, fully synthetic demo. The review-interface screenshot below shows a historical retailer catalogue page, not synthetic data. Raw provider responses, full flyer archives, personal datasets, credentials and owner-specific infrastructure configuration are not published.
 
 ## What it does
 
@@ -94,6 +94,10 @@ This diagram separates **implemented source processing**, **human-review operati
 
 ## Offer review: the human in the loop
 
+![NutriValue promotion-review interface with model comparisons and a historical MENY flyer](assets/promotion-review-interface.png)
+
+*Actual NutriValue promotion-review interface (October 2026). The screenshot includes a historical MENY catalogue page and model interpretations; it is not a synthetic illustration or proof of verified store prices. Catalogue artwork belongs to its respective rights holders.*
+
 NutriValue has a real review workflow, not a generic “AI detects everything” claim. The interface is implemented in [promotion_review_web.py](engine/src/nutrivalue/promotion_review_web.py) and its [CLI launcher](engine/scripts/review_promotions_web.py), with a hosted variant in [review_service.py](engine/src/nutrivalue/review_service.py).
 
 A reviewer can inspect a specific **chain, week, catalogue and page**, compare the original page image and OCR evidence to both models' structured promotion answers, and see uncertainty, offer type, member scope and notes. From there:
@@ -105,7 +109,6 @@ A reviewer can inspect a specific **chain, week, catalogue and page**, compare t
 
 A [create-only decision log](engine/src/nutrivalue/review_log.py) validates reviewer events and can replay them idempotently into the latest review view. The hosted service does not rewrite the master SQLite file from the browser. The reviewer records the evidence decision; it **does not** magically establish a verified checkout price.
 
-**Visual example:** A clearly labelled *synthetic* UI screenshot is intended for this section; no real catalogue page, product image, personal account or operational review screenshot has been published.
 
 ## Code walkthrough
 
