@@ -20,7 +20,18 @@ for item in filter(None, files):
     if any(name in parts for name in (".venv", ".secrets", "__pycache__", "private", "raw", "downloads")):
         errors.append((item, "forbidden data or local environment folder"))
     if low.endswith((".sqlite", ".sqlite3", ".db", ".pem", ".key", ".p12", ".pfx", ".jpg", ".jpeg", ".png", ".webp", ".pdf")):
-        errors.append((item, "binary/provider/image or key file needs independent publication review"))
+        # Allow only this exact, separately reviewed portfolio screenshot.
+        # Any changed image, or any new binary, must be reviewed again.
+        # This is a file-integrity exception, not a copyright clearance.
+        if item == "assets/promotion-review-interface.png":
+            approved_blob = "0aad1d0be2b35cc1fa6cc987f66be7f919dbb646"
+            actual_blob = subprocess.check_output(
+                ["git", "hash-object", "--", item], cwd=ROOT, text=True
+            ).strip()
+            if actual_blob != approved_blob:
+                errors.append((item, "approved screenshot changed; independent publication review required"))
+        else:
+            errors.append((item, "binary/provider/image or key file needs independent publication review"))
     if path.name == ".env" or path.name.startswith(".env.") or "credentials" in path.name.lower():
         errors.append((item, "environment/credential path"))
     if path.suffix.lower() not in (".py", ".sql", ".md", ".json", ".yml", ".yaml", ".sh", ".txt", ".toml") and path.name not in (
