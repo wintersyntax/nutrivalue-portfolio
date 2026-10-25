@@ -64,7 +64,9 @@ flowchart TB
   IND -.-> REC -.-> PLAN -.-> MLIST
 ```
 
-**Status:** Source collection, classification, promotion extraction, SQL, local review UI and review-log algorithms exist in the original engineering code. The recipe optimizer and Mealie handoff are **planned**. Real provider captures and private storage are never bundled in the public portfolio. Use synthetic fixtures when demonstrating the UI.
+**Status:** Source collection, classification, promotion extraction, SQL, local review UI and review-log algorithms exist in the original engineering code. The owner reports a deployed **private** weekly source-only collection job and an authenticated promotion-review service; this public source export includes neither deployment credentials nor provider datasets. NutriValue's general dashboard, recipe planner, Grocy adapter, Mealie handoff and advanced optimization remain **future-only**. Use synthetic fixtures when demonstrating the UI.
+
+**Future integration boundary (not deployed):** NutriValue is the **sole product**. An initial deterministic three-day-plus-four-day proposal uses reviewed/versioned recipes, ingredient basis, whole-package pricing and explicit uncertainty. Grocy/Pantry Raider is the intended future authoritative inventory snapshot and stock-movement record; NutriValue must not maintain a second mutable inventory. Mealie can later receive only approved managed recipe/meal/shopping data, while scheduled meals are never evidence of food consumption. An optional soft-preference optimizer waits for independently validated baseline plans and offline failure tests.
 
 ## How an offer is reviewed
 
