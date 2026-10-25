@@ -9,7 +9,9 @@
 
 **From Norwegian grocery advertisements and nutrition evidence to explainable price comparisons and human-reviewed shopping decisions.**
 
-NutriValue is a personal data-engineering and applied-AI project. It explores how to gather and track Norwegian grocery offers, interpret catalogue pages, extract prices and promotion terms, classify products, check identity and nutritional evidence, and ultimately work out what food is worth buying and cooking. The starting question is simple:
+NutriValue is a personal data-engineering and applied-AI project. It explores how to gather and track Norwegian grocery offers, interpret catalogue pages, extract prices and promotion terms, classify products, check identity and nutritional evidence, and ultimately work out what food is worth buying and cooking.
+
+**One product, one name:** NutriValue is the complete project, from observed offers and source-only price history to its planned recipe, inventory and nutrition-aware meal-planning functionality. Earlier design labels were working names for this **same product**, not extra applications or an independently shipped suite. The starting question is simple:
 
 > **How can grocery offers, food prices and reliable nutrition data support better shopping and meal-prep decisions?**
 
@@ -29,7 +31,35 @@ The engineering challenge is not just fetching prices. A catalogue may show a me
 | Human offer review | Web/terminal review flows, evidence display, explicit decisions and replay-safe logs | Human approval of a page offer does not verify store price |
 | Weekly offer history | SQL schemas and queries for imported source-only runs, coverage, promotion monitoring and history | Genuine private/provider data are **not distributed** |
 | Nutrition and protein economics | Generic nutrition schemas, GTIN guardrails, SKU review, Decimal NOK per protein | No independently verified real current-store price ranking |
-| Meal planning | Defined path to recipe, inventory and 3+4-day meal-prep shopping | **Planned**, not shipped |
+| Meal planning, inventory and approved handoff | Defined, reviewed-first path to versioned recipes, deterministic 3+4-day proposals, package-level shopping, stock snapshots and optional Mealie sync | **Planned**, not shipped; no Grocy, Mealie or TickTick integration is active |
+
+## Private implementation versus this public release
+
+**Documentation sync: 25 October 2026.** The private NutriValue repository
+runs a source-only weekly nine-chain Tjek offer/promotion pipeline on a
+private Cloud Run job with scheduled collection, and a separate owner-only
+review service. This **public portfolio** includes a reviewed subset of its
+engineering code, not a copy of its deployment, account configuration or
+provider evidence. Selected published modules for weekly collection, offer
+storage, promotion extraction/review, food roles and SQL were checked against
+the private code base on 25 October and were unchanged.
+
+The broader NutriValue roadmap is **future work**: a transparent,
+deterministic three-day plus four-day recipe/meal-prep proposal with
+versioned ingredients, nutrition evidence and whole-package budgets first;
+then an explicitly approved integration that **reads** inventory from
+Grocy/Pantry Raider as the intended inventory authority and optionally
+publishes only approved managed recipes, meals and shopping lists to Mealie.
+TickTick and consumption evidence are separate intended responsibilities,
+**not working connections**. Any advanced multi-objective optimizer is
+deferred until basic real-data planning and offline failure cases are
+independently validated.
+
+The private and public repositories are **deliberately different release
+surfaces**. Historical reference values, personal routines, stock, retailer
+captures and third-party content are not distributed here. The code in
+`engine/` is the public engineering snapshot; the fully fictional demo is
+independently runnable from the repository root.
 
 ## Architecture — from observation to a defensible decision
 
@@ -172,12 +202,12 @@ Price, exact product identity, food form, nutritional basis, store and date all 
 
 ## Engineering progress and constraints
 
-Source history through 22 October 2026 includes Matvaretabellen imports (one bounded snapshot: **2,121 generic foods, 57 nutrients, 120,197 measurements**) and weekly Tjek offer/photo recovery (a bounded W43 run reported **883 selected source-only offers, 213/213 catalogue pages**). These are **scoped historical engineering figures**, not evidence of nationwide price coverage, independent extraction accuracy or active retail shelf prices.
+Private implementation evidence recorded through 22 October 2026 includes Matvaretabellen imports (one bounded snapshot: **2,121 generic foods, 57 nutrients, 120,197 measurements**) and weekly Tjek offer/photo recovery (a bounded W43 run reported **883 selected source-only offers, 213/213 catalogue pages**). These are **scoped historical engineering figures**, not evidence of nationwide price coverage, independent extraction accuracy or active retail shelf prices.
 
-Three important limitations remain: printed-price OCR needs stronger reference accuracy; real retailer/source payloads cannot simply be redistributed; and verified price-to-exact-SKU-to-nutrition matching is not yet an operational nationwide shopping service. **Recipe/inventory-aware 3+4-day meal planning and Mealie handoff remain roadmap items.**
+Three important limitations remain: printed-price OCR needs stronger reference accuracy; real retailer/source payloads cannot simply be redistributed; and verified price-to-exact-SKU-to-nutrition matching is not yet an operational nationwide shopping service. **Versioned recipes, Grocy-backed inventory, deterministic 3+4-day meal planning, an optional later optimizer and approved Mealie handoff remain future NutriValue work.**
 
 ## Privacy, rights and reproducibility
 
-This portfolio intentionally excludes private offer databases, provider payloads, original flyer imagery, personal shopping/inventory files, owner-linked deployment details, credentials and tokens. A synthetic UI image may be added only when it accurately reflects the real review workflow and is visibly labelled fictional. Sources must be used under their relevant conditions; availability in a private account is not permission to redistribute raw content.
+This portfolio intentionally excludes private offer databases, provider payloads, original flyer imagery, personal shopping/inventory files, owner-linked deployment details, credentials and tokens. **No personal meal-prep parameters, health/training notes or household inventory records from the private documentation are reproduced here.** A synthetic UI image may be added only when it accurately reflects the real review workflow and is visibly labelled fictional. Sources must be used under their relevant conditions; availability in a private account is not permission to redistribute raw content.
 
 [Changelog](CHANGELOG.md) · [Architecture and offer review](docs/ARCHITECTURE_AND_REVIEW.md) · [Engineering source guide](engine/README.md) · [Development status](docs/DEVELOPMENT_SNAPSHOT.md) · [Product roadmap](docs/PRODUCT_VISION.md)
