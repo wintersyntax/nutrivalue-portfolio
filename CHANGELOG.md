@@ -1,6 +1,14 @@
 # Changelog
 
-Chronological engineering milestones through **23 October 2026**, recorded by implementation/merge date. The public portfolio was curated and reinitialized as an inspectable source snapshot on 23 October; older entries describe when engineering work was first performed, **not** separately replayed Git commits or product release dates.
+Chronological engineering milestones through **25 October 2026**, recorded by implementation/merge date. The public engineering code snapshot was curated on 23 October; updates on 25 October align public descriptions with the accepted private documentation. Earlier entries describe engineering history, **not** separately replayed Git commits or externally available datasets.
+
+## 25 October 2026 — NutriValue identity and documentation alignment
+
+- Confirmed NutriValue as the sole product name; old terminology did **not** describe a second application or module.
+- Refined the accepted private product roadmap: versioned recipes and deterministic 3+4-day proposals come first; Grocy inventory snapshots, owner-approved Mealie handoff and any advanced optimizer remain future work.
+- Updated the public README, engineering status, architecture and product vision to match these **future versus deployed** boundaries without copying private Nutrition workflows, owner records, source payloads or infrastructure secrets.
+- Verified that ten representative public engine/reference/SQL files were byte-identical to the corresponding accepted private source at the time of this documentation update; this is a **targeted comparison**, not a full repository audit.
+- Public-history presentation is maintained as a deliberately curated standalone portfolio snapshot; a root-commit reset changes reachable branch history, **not** all GitHub caches, forks, pull-request references or author metadata.
 
 ## 23 October 2026 — Public source release
 
