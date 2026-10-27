@@ -1,4 +1,4 @@
-"""Food roles, substitutions and unapproved Matvaretabellen candidate discovery.
+"""Food roles, substitutions, Matvaretabellen candidate discovery and approvals.
 
 Catalog words are a curated vocabulary, not nutrient observations. All
 similar-name MVT matches remain suggestions until separately reviewed.
@@ -8,11 +8,16 @@ from __future__ import annotations
 import json
 import re
 import sqlite3
+from decimal import Decimal
 from pathlib import Path
 
 ROLES = frozenset({
     "main_meal_protein", "breakfast_protein", "quick_protein",
     "supporting_protein", "carb_base", "calorie_booster", "freezer_helper",
+    # TASK-073: fruit, vegetables and cooking bases from real weekly offers.
+    "fruit_berries", "vegetable", "cooking_base",
+    # TASK-074: bread and sandwich toppings / spreads.
+    "bread_base", "sandwich_topping",
 })
 TIERS = frozenset({"core", "alternative", "occasional", "supporting"})
 FORMS = frozenset({"raw", "cooked", "as_sold", "drained", "dry", "unspecified"})
@@ -110,12 +115,36 @@ def _existing_or_insert(db: sqlite3.Connection, table: str,
     )
 
 
+def _migrate_role_check(db: sqlite3.Connection, schema_sql: str) -> None:
+    """Rebuild food_role_assignments when its CHECK predates newer roles.
+
+    SQLite cannot alter a CHECK constraint; rows are copied unchanged into a
+    table created from the current schema (TASK-073/074 added roles).
+    """
+    row = db.execute("SELECT sql FROM sqlite_master WHERE type='table' "
+                     "AND name='food_role_assignments'").fetchone()
+    if row is None or all(f"'{role}'" in row[0] for role in ROLES):
+        return
+    create = re.search(r"CREATE TABLE IF NOT EXISTS food_role_assignments \((.*?)\n\);",
+                       schema_sql, re.S)
+    if create is None:
+        raise FoodRoleError("schema has no food_role_assignments definition")
+    with db:
+        db.execute(f"CREATE TABLE food_role_assignments_v2 ({create.group(1)}\n)")
+        db.execute("INSERT INTO food_role_assignments_v2 (food_key, role) "
+                   "SELECT food_key, role FROM food_role_assignments")
+        db.execute("DROP TABLE food_role_assignments")
+        db.execute("ALTER TABLE food_role_assignments_v2 RENAME TO food_role_assignments")
+
+
 def seed_catalog(db: sqlite3.Connection, payload: dict,
                  schema_path: Path) -> None:
     """Validate first; insert only missing defaults with rollback on conflict."""
     validate_catalog(payload)
     db.execute("PRAGMA foreign_keys = ON")
-    db.executescript(schema_path.read_text(encoding="utf-8"))
+    schema_sql = schema_path.read_text(encoding="utf-8")
+    _migrate_role_check(db, schema_sql)
+    db.executescript(schema_sql)
     with db:
         for item in payload["foods"]:
             key = item["key"]
@@ -178,3 +207,82 @@ def reference_suggestions(db: sqlite3.Connection, payload: dict,
             output.append((item["key"], item["label"], item["form_hint"],
                            latest[0], food_id, food_name, "UNREVIEWED"))
     return output
+
+
+# ------------------------------------------------- reviewed reference foods
+# TASK-070: an owner-reviewed food_key -> Matvaretabellen food association is
+# the generic yardstick a branded candidate is compared with. Approving one
+# records a human decision for ONE snapshot; it never edits MVT data and never
+# makes a retail product, label or price verified.
+
+def _latest_snapshot(db: sqlite3.Connection) -> int:
+    row = db.execute(
+        "SELECT id FROM mvt_snapshots WHERE locale='nb' "
+        "ORDER BY retrieved_at DESC, id DESC LIMIT 1"
+    ).fetchone()
+    if row is None:
+        raise FoodRoleError("no Norwegian Matvaretabellen snapshot imported")
+    return row[0]
+
+
+def approve_reference(db: sqlite3.Connection, food_key: str, mvt_food_id: str,
+                      note: str, *, reviewed_at: str,
+                      approved_form: str | None = None) -> str:
+    """Record one owner approval on the latest snapshot.
+
+    Returns ``approved`` or ``unchanged`` (same food already approved).
+    A different food for the same key and snapshot is refused: approvals are
+    insert-only evidence, not a setting that is silently replaced.
+    """
+    if not isinstance(note, str) or not note.strip():
+        raise FoodRoleError("an approval needs a review note")
+    if not isinstance(reviewed_at, str) or not reviewed_at.strip():
+        raise FoodRoleError("an approval needs a review time")
+    snapshot = _latest_snapshot(db)
+    item = db.execute("SELECT form_hint FROM food_role_items WHERE food_key=?",
+                      (food_key,)).fetchone()
+    if item is None:
+        raise FoodRoleError(f"unknown food key {food_key!r} (seed the catalog first)")
+    form = approved_form or item[0]
+    if form not in FORMS:
+        raise FoodRoleError(f"unsupported form {form!r}")
+    food = db.execute("SELECT food_name FROM mvt_foods WHERE snapshot_id=? AND food_id=?",
+                      (snapshot, mvt_food_id)).fetchone()
+    if food is None:
+        raise FoodRoleError(f"{mvt_food_id!r} is not in Matvaretabellen snapshot {snapshot}")
+    existing = db.execute(
+        "SELECT mvt_food_id, approved_form FROM food_reference_reviews "
+        "WHERE food_key=? AND snapshot_id=?", (food_key, snapshot)).fetchone()
+    if existing is not None:
+        if existing == (mvt_food_id, form):
+            return "unchanged"
+        raise FoodRoleError(
+            f"{food_key} already approved as {existing[0]} ({existing[1]}) "
+            f"on snapshot {snapshot}; approvals are not replaced")
+    with db:
+        db.execute(
+            "INSERT INTO food_reference_reviews (food_key, snapshot_id, mvt_food_id, "
+            "reviewed_at, reviewer_note, approved_form) VALUES (?,?,?,?,?,?)",
+            (food_key, snapshot, mvt_food_id, reviewed_at, note.strip(), form))
+    return "approved"
+
+
+def approved_references(db: sqlite3.Connection, query_path: Path) -> dict[str, dict]:
+    """Approved references of the latest snapshot, keyed by food_key.
+
+    Uses the checked-in portfolio query; protein/kcal are per 100 g edible
+    part and None when the reference lacks them (never zero-filled).
+    """
+    if db.execute("SELECT 1 FROM sqlite_master WHERE name='food_reference_reviews'"
+                  ).fetchone() is None:
+        return {}
+    out = {}
+    for row in db.execute(Path(query_path).read_text(encoding="utf-8")):
+        (key, _label, _tier, form, food_id, food_name, protein, kcal,
+         reviewed_at, _note, _retrieved) = row
+        out[key] = {
+            "food_key": key, "form": form, "mvt_food_id": food_id, "name": food_name,
+            "protein_g": None if protein is None else Decimal(str(protein)),
+            "kcal": None if kcal is None else Decimal(str(kcal)),
+            "reviewed_at": reviewed_at}
+    return out

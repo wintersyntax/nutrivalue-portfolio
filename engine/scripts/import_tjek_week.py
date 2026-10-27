@@ -15,7 +15,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
-from nutrivalue.offer_database import OfferImportError, discover_runs, import_run  # noqa: E402
+from nutrivalue.offer_database import (  # noqa: E402
+    OfferImportError, discover_runs, import_run, reclassify,
+)
 
 PRIVATE = ROOT / "data" / "private"
 
@@ -45,6 +47,10 @@ def main(argv=None):
             continue
         state = "imported" if result["imported"] else "already present"
         print(f"OK   {result['run_id']}: {state}; {result['offers']} offers")
+    if db.is_file():
+        added = reclassify(db)
+        if added:
+            print(f"RECLASSIFIED {added} stored offers with the current taxonomy")
     with sqlite3.connect(db) as conn:
         for week, run_id, offers in conn.execute(
                 "SELECT week, run_id, total_saved_offers FROM v_week_run ORDER BY week"):

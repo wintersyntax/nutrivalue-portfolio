@@ -26,7 +26,7 @@ END = "2026-10-18T23:59:59+02:00"
 
 class ClassifierTests(unittest.TestCase):
     def test_taxonomy_version_and_broad_category_coverage(self):
-        self.assertEqual(TAXONOMY_VERSION, 3)
+        self.assertEqual(TAXONOMY_VERSION, 6)
         self.assertEqual(set(RULES), CATEGORIES)
         for category, groups in RULES.items():
             self.assertTrue(groups, category)
@@ -41,7 +41,7 @@ class ClassifierTests(unittest.TestCase):
             "KARBONADEDEIG 400 G": ("meat", "lean_beef_mince"),
             "SKYR NATURELL": ("dairy", "skyr"),
             "RIS 1 KG": ("grain", "rice"),
-            "SPINAT": ("produce", None),
+            "SPINAT": ("produce", "spinach"),
             "PEANØTTSMØR": ("pantry", "peanut_butter"),
             "FROSSENPIZZA": ("frozen", None),
             "FERDIGRETT": ("prepared", None),
@@ -65,7 +65,14 @@ class ClassifierTests(unittest.TestCase):
             with self.subTest(title=title):
                 result = classify_offer(title)
                 self.assertEqual(result.status, "needs_review")
-                self.assertIsNone(result.food_key)
+                # Processed-food keys do not identify raw foods.
+                self.assertEqual(
+                    result.food_key,
+                    {
+                        "RØKT LAKS": "smoked_salmon",
+                        "FISKEKAKER": "fish_cakes",
+                    }.get(title),
+                )
                 self.assertEqual(result.reason, "preparation_or_form")
                 self.assertEqual(result.form, "processed")
 
@@ -199,7 +206,7 @@ class StagingAuditTests(unittest.TestCase):
         self.assertEqual(report["by_category"]["fish"], 3)
         self.assertEqual(report["by_category"]["unresolved"], 1)
         self.assertEqual(report["by_chain"]["REMA 1000"]["all"], 7)
-        self.assertEqual(report["potential_food_key_types"], 3)
+        self.assertEqual(report["potential_food_key_types"], 4)
         # Two of seven offers are NOT eligible food categories: explicit
         # non-food toilet paper and the unknown source heading.
         self.assertEqual(report["unconditioned_source_consistent_kg_rate"], 4)

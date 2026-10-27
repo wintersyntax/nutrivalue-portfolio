@@ -11,7 +11,7 @@ import unicodedata
 from dataclasses import dataclass, replace
 from functools import lru_cache
 
-TAXONOMY_VERSION = 3
+TAXONOMY_VERSION = 6
 STATES = frozenset({"matched", "needs_review", "unmapped"})
 CATEGORIES = frozenset({
     "fish", "meat", "dairy", "produce", "grain", "pantry",
@@ -714,8 +714,267 @@ def _classify_offer(heading: str, description: str | None = None) -> Classificat
                           "known_food_type" if food_key else "broad_category")
 
 
-def classify_offer(heading: str, description: str | None = None) -> Classification:
+# TASK-073 (taxonomy v4): reviewed food-key aliases applied AFTER the category
+# decision above. A key is added only to a matched, complete single product
+# whose category is one of the key's categories and whose heading head (before
+# MED) names exactly one key. Prepared, smoked, marinated, plant-imitation and
+# mixed offers are needs_review before this point, so a raw-food key never lands
+# on a cooked or processed product. "a+b" requires both phrases; EXCLUDE words
+# (flavours) keep sweetened dairy out of plain-dairy keys.
+FLAVOURED = ("vanilje", "jordbær", "bringebær", "blåbær", "sjokolade", "honning",
+             "granola", "mango", "fersken", "karamell", "caramel", "pære", "eple",
+             "banan", "kirsebær", "skogsbær", "pasjon", "lime", "sitron", "kanel")
+FOOD_KEY_ALIASES = (
+    # existing keys the v3 product-family path left without a key
+    ("whole_eggs", ("dairy",), ("frokostegg",), ()),
+    ("chicken_thigh_fillet", ("meat",), ("kyllinglårfilet", "kylling+lårfilet"), ()),
+    # a beef & pork blend is neither key (the MENY W43 "storfe&svin" case)
+    ("beef_mince", ("meat",), ("storfekjøttdeig", "kjøttdeig+storfe"), ("svin",)),
+    ("pork_mince", ("meat",), ("svinekjøttdeig", "kjøttdeig+svin"), ("storfe",)),
+    ("pork_chops", ("meat",), ("nakkekoteletter", "nakkekotelett", "svinekoteletter"), ()),
+    ("mager_kesam", ("dairy",), ("kesam+mager", "kvarg+mager"), FLAVOURED),
+    # new meat and fish
+    ("chicken_mince", ("meat",), ("kyllingkjøttdeig",), ()),
+    ("whole_chicken", ("meat",), ("hel kylling", "hele kyllinger"), ()),
+    ("trout", ("fish",), ("ørret", "ørretfilet", "ørretfileter"), ()),
+    ("haddock", ("fish",), ("hyse", "hysefilet", "hysefileter"), ()),
+    # dairy
+    ("yoghurt_plain", ("dairy",), ("yoghurt+naturell", "yogurt+naturell"), FLAVOURED + ("gresk",)),
+    ("greek_yoghurt", ("dairy",), ("gresk yoghurt",), FLAVOURED),
+    ("kefir", ("dairy",), ("kefir",), FLAVOURED),
+    ("yellow_cheese", ("dairy",), ("gulost", "norvegia", "jarlsberg", "hvitost",
+                                   "revet ost"), ("lettost",)),
+    ("feta", ("dairy",), ("feta", "fetaost"), ()),
+    ("creme_fraiche", ("dairy",), ("crème fraîche", "creme fraiche"), ()),
+    ("parmesan", ("dairy",), ("parmesan", "parmigiano"), ()),
+    ("mozzarella", ("dairy",), ("mozzarella", "mozarella"), ("sticks",)),
+    ("sour_cream", ("dairy",), ("rømme", "lettrømme", "seterrømme"), ()),
+    ("cooking_cream", ("dairy",), ("matfløte",), ()),
+    # fruit and berries (fresh or frozen)
+    ("strawberries", ("produce",), ("jordbær",), ()),
+    ("raspberries", ("produce",), ("bringebær",), ()),
+    ("blueberries", ("produce",), ("blåbær",), ()),
+    ("banana", ("produce",), ("banan", "bananer"), ()),
+    ("apple", ("produce",), ("eple", "epler"), ()),
+    ("pear", ("produce",), ("pære", "pærer"), ()),
+    ("orange", ("produce",), ("appelsin", "appelsiner"), ()),
+    ("clementine", ("produce",), ("klementiner", "clementiner", "mandariner"), ()),
+    ("grapes", ("produce",), ("druer",), ()),
+    ("plums", ("produce",), ("plommer",), ()),
+    ("mango", ("produce",), ("mango",), ()),
+    ("avocado", ("produce",), ("avokado", "avocado"), ()),
+    ("lemon", ("produce",), ("sitron", "sitroner"), ()),
+    ("kiwi_fruit", ("produce",), ("kiwi",), ()),
+    # vegetables and potatoes
+    ("potatoes", ("produce",), ("poteter", "potet", "delikatessepoteter"), ()),
+    ("sweet_potatoes", ("produce",), ("søtpotet", "søtpoteter"), ()),
+    ("carrots", ("produce",), ("gulrot", "gulrøtter"), ()),
+    ("tomatoes", ("produce",), ("tomat", "tomater", "cherrytomater", "cherrytomat",
+                                "klasetomat", "hverdagstomater", "sødmetomater"), ()),
+    ("bell_pepper", ("produce",), ("paprika", "spisspaprika"), ()),
+    ("cucumber", ("produce",), ("agurk",), ()),
+    ("salad_greens", ("produce",), ("salat", "isberg", "hjertesalat", "crispisalat",
+                                    "isbergsalat", "ruccola", "ruccula"), ()),
+    ("spinach", ("produce",), ("spinat",), ()),
+    ("onion", ("produce",), ("løk", "rødløk", "gul løk"), ()),
+    ("garlic", ("produce",), ("hvitløk",), ()),
+    ("broccoli", ("produce",), ("brokkoli",), ()),
+    ("cauliflower", ("produce",), ("blomkål",), ()),
+    ("cabbage", ("produce",), ("hvitkål", "spisskål"), ()),
+    ("mushrooms", ("produce",), ("sjampinjong", "sjampinjonger", "sopp"), ()),
+    ("zucchini", ("produce",), ("squash",), ()),
+    ("leek", ("produce",), ("purre",), ()),
+    ("chili", ("produce",), ("chili", "rød chili"), ()),
+    ("kale", ("produce",), ("grønnkål",), ()),
+    ("green_beans", ("produce",), ("aspargesbønner",), ()),
+    ("frozen_vegetables", ("produce", "frozen"), ("frosne grønnsaker", "wokblanding",
+                                                  "grønnsaksblanding", "brokkoliblanding"), ()),
+    ("sweetcorn", ("produce", "pantry"), ("maiskorn", "mais"), ()),
+    # cooking bases and pantry
+    ("wheat_flour", ("grain",), ("hvetemel",), ()),
+    ("canned_tomatoes", ("pantry",), ("hakkede tomater", "tomater hakkede",
+                                      "hermetiske tomater", "passata"), ()),
+    ("tomato_paste", ("pantry",), ("tomatpure", "tomatpuré"), ()),
+    ("pasta_sauce", ("pantry",), ("pastasaus",), ()),
+    ("pesto", ("pantry",), ("pesto",), ()),
+    ("coconut_milk", ("pantry",), ("kokosmelk",), ()),
+    ("stock", ("pantry",), ("buljong", "kjøttbuljong", "grønnsaksbuljong",
+                            "kyllingbuljong", "fiskebuljong"), ()),
+    ("olive_oil", ("pantry",), ("olivenolje",), ()),
+    ("rapeseed_oil", ("pantry",), ("rapsolje",), ()),
+    ("honey", ("pantry",), ("honning", "akasiehonning"), ()),
+    ("mixed_nuts", ("pantry",), ("nøtter", "nøttemiks", "nøtteblanding"), ()),
+    ("almonds", ("pantry",), ("mandler",), ()),
+    ("walnuts", ("pantry",), ("valnøtter",), ()),
+    ("cashews", ("pantry",), ("cashewnøtter",), ()),
+    ("chia_seeds", ("pantry",), ("chiafrø",), ()),
+    ("sesame_seeds", ("pantry",), ("sesamfrø",), ()),
+    ("sunflower_seeds", ("pantry",), ("solsikkekjerner", "solsikkefrø"), ()),
+    ("pumpkin_seeds", ("pantry",), ("gresskarkjerner",), ()),
+    ("flax_seeds", ("pantry",), ("linfrø",), ()),
+    ("peanuts", ("pantry",), ("peanøtter",), ("chilinøtter",)),
+    ("chickpeas", ("pantry",), ("kikerter",), ()),
+    ("beans", ("pantry",), ("kidneybønner", "svarte bønner", "hvite bønner"), ()),
+    ("red_lentils", ("pantry",), ("røde linser",), ()),
+)
+
+
+# TASK-074 (taxonomy v5): processed foods, bread and spreads. These keys name
+# the processed product itself (its reference is the processed food), so they
+# may also be attached to a "preparation_or_form" review (KOKT SKINKE, RØKT LAKS,
+# FISKEKAKER), which keeps its review status. They are never used for a raw-food reading, and the
+# raw table above is never applied to a processed/prepared offer. Prepared meals,
+# sweets, snacks and drinks are outside both tables (owner decision).
+# An alias starting with "*" matches a token ending (compound): *syltetøy.
+SAUCED = ("saus", "tomatsaus", "brun saus", "i tomat")
+PROCESSED_KEY_ALIASES = (
+    ("cooked_ham", ("meat",), ("kokt skinke", "skinke", "smårettskinke"), ("pizza",)),
+    ("liver_pate", ("meat",), ("leverpostei", "postei", "baconpostei"), ()),
+    ("salami", ("meat",), ("salami", "gullsalami", "kryddersalami"), ()),
+    ("cured_ham", ("meat",), ("spekeskinke", "prosciutto", "prociutto", "serranoskinke"), ()),
+    ("chicken_cold_cuts", ("meat",), ("kyllingpålegg", "salatkjøtt"), ()),
+    ("turkey_cold_cuts", ("meat",), ("kalkunpålegg",), ()),
+    ("bacon", ("meat",), ("bacon", "baconterninger", "stjernebacon", "terning bacon",
+                          "baconskiver"), ()),
+    ("chicken_bacon", ("meat",), ("kyllingbacon",), ()),
+    ("hot_dogs", ("meat",), ("grillpølse", "grillpølser", "wienerpølse", "wienerpølser",
+                             "pølse", "pølser"), ()),
+    ("meat_sausage", ("meat",), ("kjøttpølse",), ()),
+    ("falukorv", ("meat",), ("falukorv",), ()),
+    ("turkey_sausage", ("meat",), ("kalkunkorv", "kalkunpølse", "kalkunpølser"), ()),
+    ("meatballs", ("meat",), ("kjøttboller",), SAUCED),
+    ("karbonader", ("meat",), ("karbonader", "karbonade"), SAUCED),
+    ("beef_burger", ("meat",), ("burger", "burgere", "hamburger", "hamburgere"), ()),
+    ("fish_cakes", ("fish",), ("fiskekaker", "fiskekake", "hjertefiskekaker", "hysekaker"), ()),
+    ("fish_fingers", ("fish",), ("fiskepinner",), ()),
+    ("fish_pudding", ("fish",), ("fiskepudding",), ()),
+    ("fish_burger", ("fish",), ("fiskeburger", "fiskeburgere", "lakseburger"), ()),
+    ("smoked_salmon", ("fish",), ("røkt laks", "røykt laks"), ()),
+    ("tuna_in_oil", ("fish",), ("tunfisk+olje", "tunfisk+olivenolje"), ("dressing", "tomat")),
+    ("bread", ("grain",), ("brød", "grovbrød", "kornbrød", "bondebrød", "fjellbrød",
+                           "havrebrød", "speltbrød", "solsikkebrød", "flerkornbrød",
+                           "familiebrød", "superbrød", "bjørnisbrød", "kneippbrød"), ()),
+    ("white_bread", ("grain",), ("loff", "spesialloff"), ()),
+    ("bread_rolls", ("grain",), ("rundstykker", "rundstykke", "morgenstykker",
+                                 "breakfast rolls", "osterundstykke"), ()),
+    ("crispbread", ("grain",), ("knekkebrød", "flatbrød"), ()),
+    ("tortillas", ("grain",), ("tortilla", "tortillas", "tortillalefser"), ()),
+    ("polar_bread", ("grain",), ("polarbrød", "lomper"), ()),
+    ("granola", ("grain",), ("granola", "müsli"), ()),
+    ("butter", ("dairy",), ("smør", "meierismør"), ()),
+    ("margarine", ("dairy",), ("margarin", "melange", "soft flora", "bremykt"), ()),
+    ("brown_cheese", ("dairy",), ("brunost", "fløtemysost", "gudbrandsdalsost",
+                                  "julebrunost"), ()),
+    ("cream_cheese", ("dairy",), ("kremost", "philadelphia", "kremgo"), ()),
+    ("yoghurt_flavoured", ("dairy",), ("yoghurt",), ("naturell", "gresk", "drikkeyoghurt",
+                                                     "drikke", "junior", "rislunsj")),
+    ("jam", ("pantry",), ("*syltetøy",), ()),
+    ("caviar", ("pantry",), ("kaviar", "kaviarmix"), ()),
+    ("mayonnaise", ("pantry",), ("*majones",), ()),
+)
+PROCESSED_KEYS = frozenset(key for key, _, _, _ in PROCESSED_KEY_ALIASES)
+EXCLUDED_BY_KEY = {key: exclude for key, _, _, exclude in FOOD_KEY_ALIASES + PROCESSED_KEY_ALIASES
+                   if exclude}
+
+
+def _excluded(norm: str, key: str) -> bool:
+    """Also applied to v3 RULES keys: "Rice-/egg noodles" is not eggs."""
+    head = norm.split(" med ", 1)[0]
+    if any(_present(head, _normal(w)) for w in EXCLUDED_BY_KEY.get(key, ())):
+        return True
+    return key not in PROCESSED_KEYS and any(
+        token.endswith(word) for token in head.split() for word in NOT_THE_FOOD)
+
+
+# Words that make a fruit/vegetable/egg name an ingredient of another product
+# (jam, fruit drinks and purees, sun-dried in oil, noodles). Token suffixes.
+NOT_THE_FOOD = ("syltetøy", "cevita", "skviz", "soltørkede", "noodles", "nudler",
+                "juice", "saft", "smoothie", "sweet")
+
+
+def _alias_present(head: str, alias: str) -> bool:
+    if alias.startswith("*"):
+        tail = _normal(alias[1:])
+        return any(token.endswith(tail) for token in head.split())
+    return all(_present(head, _normal(part)) for part in alias.split("+"))
+
+
+def _table_keys(head: str, category: str, table) -> set[str]:
+    found = set()
+    for key, categories, aliases, exclude in table:
+        if category not in categories or any(_present(head, _normal(w)) for w in exclude):
+            continue
+        if any(_alias_present(head, alias) for alias in aliases):
+            found.add(key)
+    return found
+
+
+@lru_cache(maxsize=4096)
+def _alias_food_key(norm: str, category: str, processed_only: bool = False):
+    """One reviewed key for the heading head, or None when none or several fit.
+
+    ``processed_only`` is used for "preparation_or_form" reviews: only keys that
+    name the processed product itself may resolve them.
+    """
+    head = norm.split(" med ", 1)[0]
+    found = _table_keys(head, category, PROCESSED_KEY_ALIASES)
+    if not processed_only and not any(
+            token.endswith(word) for token in head.split() for word in NOT_THE_FOOD):
+        found |= _table_keys(head, category, FOOD_KEY_ALIASES)
+    return next(iter(found)) if len(found) == 1 else None
+
+
+# TASK-072 (taxonomy v6): the description may only ever REMOVE a raw-food key.
+# A ready-meal brand ("KYLLINGBRYST" = Fjordland Kyllingbryst i urtesaus) or a
+# preparation word in the description ("200 g, grillet, Prior") means the sold
+# item is not the raw food the heading names. Processed keys are unaffected.
+READY_MEAL_BRANDS = ("fjordland", "fersk ferdig", "toro", "grandiosa", "dr oetker")
+# Preparation words demote only raw meat/fish keys; cooked shrimp, canned fish
+# and eggs are sold cooked or as-is, so "kokt" says nothing about them.
+RAW_MEAT_FISH_KEYS = frozenset({
+    "chicken_breast", "chicken_thigh_fillet", "chicken_drumstick", "chicken_mince",
+    "whole_chicken", "turkey_breast", "turkey_mince", "beef_mince", "lean_beef_mince",
+    "pork_mince", "pork_chops", "pork_tenderloin", "salmon", "cod", "saithe", "trout",
+    "haddock",
+})
+
+
+# A raw meat/fish pack this small is almost always sliced cold cuts (W42/W43:
+# 100-110 g "Kyllingfilet naturell" at 227-339 NOK/kg), while the smallest real
+# raw packs were 180 g seifilet, 230 g kyllingfilet and 240 g lårfilet.
+SMALL_PACK_G = 150
+
+
+def pack_grams(quantity, unit, pack_count=None):
+    """Whole-pack mass in grams from stored offer fields, or None."""
+    try:
+        value = float(quantity)
+    except (TypeError, ValueError):
+        return None
+    factor = {"g": 1, "kg": 1000}.get((unit or "").strip().lower())
+    if factor is None or value <= 0:
+        return None
+    count = pack_count if isinstance(pack_count, int) and pack_count > 1 else 1
+    return value * factor * count
+
+
+def _description_demotes(description: str | None, key: str):
+    if not description:
+        return None
+    text = _normal(description)
+    if any(_present(text, brand) for brand in READY_MEAL_BRANDS):
+        return "ready_meal_description"
+    if key in RAW_MEAT_FISH_KEYS and any(_present(text, _normal(w)) for w in FORM_REVIEW):
+        return "preparation_in_description"
+    return None
+
+
+def classify_offer(heading: str, description: str | None = None,
+                   grams: float | None = None) -> Classification:
     """Broad search tags; a singular compatibility view when supported.
+
+    ``grams`` (whole-pack mass, when known) only ever removes a raw meat/fish
+    key from a pack below SMALL_PACK_G (sliced cold cuts), never adds one.
 
     Storage and drinkable dairy may overlap with product-kind tags. Separate
     products never gain a joint food key or analytical denominator from tags.
@@ -729,6 +988,32 @@ def classify_offer(heading: str, description: str | None = None) -> Classificati
                        offer_kind=kind, tag_status="complete" if complete else "partial")
     if result.offer_kind != "single_product" or result.tag_status != "complete":
         return result
+    if result.food_key is not None and _excluded(_normal(heading), result.food_key):
+        result = replace(result, food_key=None, reason="food_key_excluded")
+    elif result.status == "matched" and result.food_key is None and result.food_category:
+        key = _alias_food_key(_normal(heading), result.food_category)
+        if key is not None:
+            result = replace(result, food_key=key, reason=(
+                "reviewed_processed_key" if key in PROCESSED_KEYS
+                else "reviewed_food_key_alias"))
+    elif (result.status == "needs_review" and result.reason == "preparation_or_form"
+          and result.food_category):
+        key = _alias_food_key(_normal(heading), result.food_category, processed_only=True)
+        if key is not None:
+            # The category review stays (status/reason unchanged); the key
+            # names the processed product, never a raw food.
+            result = replace(result, food_key=key, form="processed")
+    demote = (_description_demotes(description, result.food_key)
+              if result.food_key is not None and result.food_key not in PROCESSED_KEYS else None)
+    if (demote is None and result.food_key in RAW_MEAT_FISH_KEYS
+            and grams is not None and grams < SMALL_PACK_G):
+        demote = "small_pack_cold_cut"
+    if demote == "ready_meal_description":
+        return replace(result, status="needs_review", food_category="prepared", food_key=None,
+                       form="processed", reason=demote, category_tags=("prepared",))
+    if demote:
+        result = replace(result, status="needs_review", food_key=None, form="processed",
+                         reason=demote)
     tags = set(result.category_tags)
     tags.update(_overlap_tags(result.food_category, _normal(heading)))
     if result.form == "frozen" and result.food_category != "non_food":

@@ -32,8 +32,14 @@ class ProductKindTests(unittest.TestCase):
             with self.subTest(title=title):
                 result = classify_offer(title)
                 self.assertEqual(result.food_category, category)
-                if category in {'frozen','pantry','prepared'}:
-                    self.assertIsNone(result.food_key)
+                reviewed = {
+                    'Klar kjøttbuljong': 'stock',
+                    'Kylling og grønnsaksbuljong': 'stock',
+                    'Hakkede tomater med hvitløk': 'canned_tomatoes',
+                    'Gourmetmajones': 'mayonnaise',
+                }
+                if category in {'frozen', 'pantry', 'prepared'}:
+                    self.assertEqual(result.food_key, reviewed.get(title))
 
     def test_new_compounds_and_inflections_generalize(self):
         for title, cat in {
@@ -159,7 +165,7 @@ class ProductKindTests(unittest.TestCase):
             self.assertFalse(classify_offer(title).food_analysis_eligible)
         self.assertIsNone(classify_offer('Vegansk burger').food_key)
         self.assertIsNone(classify_offer('Vegansk burger').food_category)
-        self.assertIsNone(classify_offer('Tunfisk i olivenolje').food_key)
+        self.assertEqual(classify_offer('Tunfisk i olivenolje').food_key, 'tuna_in_oil')
 
 
 if __name__ == '__main__':

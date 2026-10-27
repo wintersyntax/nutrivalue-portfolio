@@ -159,7 +159,7 @@ The engine code is intentionally accessible in the repository rather than hidden
 | [engine/src/nutrivalue/product_candidates.py](engine/src/nutrivalue/product_candidates.py) | Offline-only candidate parsing and scoring with [synthetic tests](engine/tests/test_product_candidates.py) |
 | [engine/analytics](engine/analytics) | 33 production-oriented SQL schema and analytic source files |
 | [engine/research/rema_flyer_2026](engine/research/rema_flyer_2026) | 32 OCR experiments and reference test programs across W40–W43 |
-| [engine/tests](engine/tests) | 67 selected engineering test files across parsing, promotion handling, stores, SQL and identity |
+| [engine/tests](engine/tests) | 68 selected engineering test files across parsing, promotion handling, stores, SQL and identity |
 
 [Read the source tour and optional dependencies](engine/README.md).
 
@@ -214,3 +214,8 @@ Three important limitations remain: printed-price OCR needs stronger reference a
 This portfolio intentionally excludes private offer databases, provider payloads, original flyer imagery, personal shopping/inventory files, owner-linked deployment details, credentials and tokens. **No personal meal-prep parameters, health/training notes or household inventory records from the private documentation are reproduced here.** The included synthetic review screenshot illustrates implemented reviewer controls with example data, not real offer evidence. Sources must be used under their relevant conditions; availability in a private account is not permission to redistribute raw content.
 
 [Changelog](CHANGELOG.md) · [Architecture and offer review](docs/ARCHITECTURE_AND_REVIEW.md) · [Engineering source guide](engine/README.md) · [Development status](docs/DEVELOPMENT_SNAPSHOT.md) · [Product roadmap](docs/PRODUCT_VISION.md)
+
+
+### Taxonomy v6 and promotion normalization
+
+The published offline engine includes a 140-food generic vocabulary, processed-food and ready-meal safeguards, and a promotion-restatement filter. These algorithms do not establish verified product identities, store prices or measured extraction accuracy.

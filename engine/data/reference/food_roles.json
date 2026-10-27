@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "about": "Curated food decision vocabulary distilled from the Food System plan and Nutrition Reference Appendix. No July-2026 benchmark prices, per-food protein estimates, private inventory, or assumed Matvaretabellen matches.",
+  "about": "Public generic Norwegian food vocabulary. No real prices, personal inventory, shopping records or verified nutrition.",
   "roles": [
     "main_meal_protein",
     "breakfast_protein",
@@ -8,7 +8,12 @@
     "supporting_protein",
     "carb_base",
     "calorie_booster",
-    "freezer_helper"
+    "freezer_helper",
+    "fruit_berries",
+    "vegetable",
+    "cooking_base",
+    "bread_base",
+    "sandwich_topping"
   ],
   "foods": [
     {
@@ -468,6 +473,1330 @@
       ],
       "mvt_search_terms": [
         "peanøttsmør"
+      ]
+    },
+    {
+      "key": "chicken_mince",
+      "label": "Kyllingkjøttdeig",
+      "tier": "alternative",
+      "form_hint": "raw",
+      "roles": [
+        "main_meal_protein"
+      ],
+      "mvt_search_terms": [
+        "kjøttdeig, kylling"
+      ]
+    },
+    {
+      "key": "whole_chicken",
+      "label": "Hel kylling",
+      "tier": "occasional",
+      "form_hint": "raw",
+      "roles": [
+        "main_meal_protein"
+      ],
+      "mvt_search_terms": [
+        "kylling, hel"
+      ]
+    },
+    {
+      "key": "trout",
+      "label": "Ørret",
+      "tier": "occasional",
+      "form_hint": "raw",
+      "roles": [
+        "main_meal_protein"
+      ],
+      "mvt_search_terms": [
+        "ørret"
+      ]
+    },
+    {
+      "key": "haddock",
+      "label": "Hyse",
+      "tier": "alternative",
+      "form_hint": "raw",
+      "roles": [
+        "main_meal_protein"
+      ],
+      "mvt_search_terms": [
+        "hyse"
+      ]
+    },
+    {
+      "key": "yoghurt_plain",
+      "label": "Yoghurt naturell",
+      "tier": "supporting",
+      "form_hint": "as_sold",
+      "roles": [
+        "breakfast_protein",
+        "supporting_protein"
+      ],
+      "mvt_search_terms": [
+        "yoghurt, naturell"
+      ]
+    },
+    {
+      "key": "greek_yoghurt",
+      "label": "Gresk yoghurt naturell",
+      "tier": "supporting",
+      "form_hint": "as_sold",
+      "roles": [
+        "breakfast_protein",
+        "supporting_protein"
+      ],
+      "mvt_search_terms": [
+        "yoghurt, gresk"
+      ]
+    },
+    {
+      "key": "kefir",
+      "label": "Kefir",
+      "tier": "supporting",
+      "form_hint": "as_sold",
+      "roles": [
+        "breakfast_protein"
+      ],
+      "mvt_search_terms": [
+        "kefir"
+      ]
+    },
+    {
+      "key": "yellow_cheese",
+      "label": "Gulost",
+      "tier": "supporting",
+      "form_hint": "as_sold",
+      "roles": [
+        "supporting_protein",
+        "calorie_booster"
+      ],
+      "mvt_search_terms": [
+        "norvegia",
+        "gulost",
+        "hvitost"
+      ]
+    },
+    {
+      "key": "mozzarella",
+      "label": "Mozzarella",
+      "tier": "supporting",
+      "form_hint": "as_sold",
+      "roles": [
+        "supporting_protein",
+        "calorie_booster"
+      ],
+      "mvt_search_terms": [
+        "mozzarella"
+      ]
+    },
+    {
+      "key": "sour_cream",
+      "label": "Rømme",
+      "tier": "supporting",
+      "form_hint": "as_sold",
+      "roles": [
+        "cooking_base",
+        "calorie_booster"
+      ],
+      "mvt_search_terms": [
+        "rømme"
+      ]
+    },
+    {
+      "key": "cooking_cream",
+      "label": "Matfløte",
+      "tier": "supporting",
+      "form_hint": "as_sold",
+      "roles": [
+        "cooking_base",
+        "calorie_booster"
+      ],
+      "mvt_search_terms": [
+        "matfløte",
+        "fløte"
+      ]
+    },
+    {
+      "key": "strawberries",
+      "label": "Jordbær",
+      "tier": "supporting",
+      "form_hint": "raw",
+      "roles": [
+        "fruit_berries"
+      ],
+      "mvt_search_terms": [
+        "jordbær"
+      ]
+    },
+    {
+      "key": "raspberries",
+      "label": "Bringebær",
+      "tier": "supporting",
+      "form_hint": "raw",
+      "roles": [
+        "fruit_berries"
+      ],
+      "mvt_search_terms": [
+        "bringebær"
+      ]
+    },
+    {
+      "key": "blueberries",
+      "label": "Blåbær",
+      "tier": "supporting",
+      "form_hint": "raw",
+      "roles": [
+        "fruit_berries"
+      ],
+      "mvt_search_terms": [
+        "blåbær"
+      ]
+    },
+    {
+      "key": "banana",
+      "label": "Banan",
+      "tier": "supporting",
+      "form_hint": "raw",
+      "roles": [
+        "fruit_berries"
+      ],
+      "mvt_search_terms": [
+        "banan"
+      ]
+    },
+    {
+      "key": "apple",
+      "label": "Eple",
+      "tier": "supporting",
+      "form_hint": "raw",
+      "roles": [
+        "fruit_berries"
+      ],
+      "mvt_search_terms": [
+        "eple"
+      ]
+    },
+    {
+      "key": "pear",
+      "label": "Pære",
+      "tier": "supporting",
+      "form_hint": "raw",
+      "roles": [
+        "fruit_berries"
+      ],
+      "mvt_search_terms": [
+        "pære"
+      ]
+    },
+    {
+      "key": "orange",
+      "label": "Appelsin",
+      "tier": "supporting",
+      "form_hint": "raw",
+      "roles": [
+        "fruit_berries"
+      ],
+      "mvt_search_terms": [
+        "appelsin"
+      ]
+    },
+    {
+      "key": "clementine",
+      "label": "Klementin",
+      "tier": "supporting",
+      "form_hint": "raw",
+      "roles": [
+        "fruit_berries"
+      ],
+      "mvt_search_terms": [
+        "klementin",
+        "mandarin"
+      ]
+    },
+    {
+      "key": "grapes",
+      "label": "Druer",
+      "tier": "supporting",
+      "form_hint": "raw",
+      "roles": [
+        "fruit_berries"
+      ],
+      "mvt_search_terms": [
+        "druer"
+      ]
+    },
+    {
+      "key": "plums",
+      "label": "Plommer",
+      "tier": "supporting",
+      "form_hint": "raw",
+      "roles": [
+        "fruit_berries"
+      ],
+      "mvt_search_terms": [
+        "plomme"
+      ]
+    },
+    {
+      "key": "mango",
+      "label": "Mango",
+      "tier": "supporting",
+      "form_hint": "raw",
+      "roles": [
+        "fruit_berries"
+      ],
+      "mvt_search_terms": [
+        "mango"
+      ]
+    },
+    {
+      "key": "avocado",
+      "label": "Avokado",
+      "tier": "supporting",
+      "form_hint": "raw",
+      "roles": [
+        "fruit_berries",
+        "calorie_booster"
+      ],
+      "mvt_search_terms": [
+        "avokado"
+      ]
+    },
+    {
+      "key": "lemon",
+      "label": "Sitron",
+      "tier": "supporting",
+      "form_hint": "raw",
+      "roles": [
+        "fruit_berries",
+        "cooking_base"
+      ],
+      "mvt_search_terms": [
+        "sitron"
+      ]
+    },
+    {
+      "key": "potatoes",
+      "label": "Poteter",
+      "tier": "supporting",
+      "form_hint": "raw",
+      "roles": [
+        "carb_base",
+        "vegetable"
+      ],
+      "mvt_search_terms": [
+        "potet"
+      ]
+    },
+    {
+      "key": "sweet_potatoes",
+      "label": "Søtpoteter",
+      "tier": "supporting",
+      "form_hint": "raw",
+      "roles": [
+        "carb_base",
+        "vegetable"
+      ],
+      "mvt_search_terms": [
+        "søtpotet"
+      ]
+    },
+    {
+      "key": "carrots",
+      "label": "Gulrot",
+      "tier": "supporting",
+      "form_hint": "raw",
+      "roles": [
+        "vegetable"
+      ],
+      "mvt_search_terms": [
+        "gulrot"
+      ]
+    },
+    {
+      "key": "tomatoes",
+      "label": "Tomater",
+      "tier": "supporting",
+      "form_hint": "raw",
+      "roles": [
+        "vegetable"
+      ],
+      "mvt_search_terms": [
+        "tomat"
+      ]
+    },
+    {
+      "key": "bell_pepper",
+      "label": "Paprika",
+      "tier": "supporting",
+      "form_hint": "raw",
+      "roles": [
+        "vegetable"
+      ],
+      "mvt_search_terms": [
+        "paprika"
+      ]
+    },
+    {
+      "key": "cucumber",
+      "label": "Agurk",
+      "tier": "supporting",
+      "form_hint": "raw",
+      "roles": [
+        "vegetable"
+      ],
+      "mvt_search_terms": [
+        "agurk"
+      ]
+    },
+    {
+      "key": "salad_greens",
+      "label": "Salat",
+      "tier": "supporting",
+      "form_hint": "raw",
+      "roles": [
+        "vegetable"
+      ],
+      "mvt_search_terms": [
+        "salat",
+        "isbergsalat"
+      ]
+    },
+    {
+      "key": "spinach",
+      "label": "Spinat",
+      "tier": "supporting",
+      "form_hint": "raw",
+      "roles": [
+        "vegetable"
+      ],
+      "mvt_search_terms": [
+        "spinat"
+      ]
+    },
+    {
+      "key": "onion",
+      "label": "Løk",
+      "tier": "supporting",
+      "form_hint": "raw",
+      "roles": [
+        "vegetable",
+        "cooking_base"
+      ],
+      "mvt_search_terms": [
+        "løk"
+      ]
+    },
+    {
+      "key": "garlic",
+      "label": "Hvitløk",
+      "tier": "supporting",
+      "form_hint": "raw",
+      "roles": [
+        "cooking_base"
+      ],
+      "mvt_search_terms": [
+        "hvitløk"
+      ]
+    },
+    {
+      "key": "broccoli",
+      "label": "Brokkoli",
+      "tier": "supporting",
+      "form_hint": "raw",
+      "roles": [
+        "vegetable"
+      ],
+      "mvt_search_terms": [
+        "brokkoli"
+      ]
+    },
+    {
+      "key": "cauliflower",
+      "label": "Blomkål",
+      "tier": "supporting",
+      "form_hint": "raw",
+      "roles": [
+        "vegetable"
+      ],
+      "mvt_search_terms": [
+        "blomkål"
+      ]
+    },
+    {
+      "key": "cabbage",
+      "label": "Kål",
+      "tier": "supporting",
+      "form_hint": "raw",
+      "roles": [
+        "vegetable"
+      ],
+      "mvt_search_terms": [
+        "hvitkål",
+        "kål"
+      ]
+    },
+    {
+      "key": "mushrooms",
+      "label": "Sjampinjong",
+      "tier": "supporting",
+      "form_hint": "raw",
+      "roles": [
+        "vegetable"
+      ],
+      "mvt_search_terms": [
+        "sjampinjong",
+        "sopp"
+      ]
+    },
+    {
+      "key": "zucchini",
+      "label": "Squash",
+      "tier": "supporting",
+      "form_hint": "raw",
+      "roles": [
+        "vegetable"
+      ],
+      "mvt_search_terms": [
+        "squash"
+      ]
+    },
+    {
+      "key": "leek",
+      "label": "Purre",
+      "tier": "supporting",
+      "form_hint": "raw",
+      "roles": [
+        "vegetable"
+      ],
+      "mvt_search_terms": [
+        "purre"
+      ]
+    },
+    {
+      "key": "frozen_vegetables",
+      "label": "Frosne grønnsaker",
+      "tier": "supporting",
+      "form_hint": "as_sold",
+      "roles": [
+        "vegetable",
+        "freezer_helper"
+      ],
+      "mvt_search_terms": [
+        "grønnsaksblanding",
+        "wokgrønnsaker"
+      ]
+    },
+    {
+      "key": "sweetcorn",
+      "label": "Mais",
+      "tier": "supporting",
+      "form_hint": "as_sold",
+      "roles": [
+        "vegetable"
+      ],
+      "mvt_search_terms": [
+        "mais"
+      ]
+    },
+    {
+      "key": "wheat_flour",
+      "label": "Hvetemel",
+      "tier": "supporting",
+      "form_hint": "dry",
+      "roles": [
+        "cooking_base"
+      ],
+      "mvt_search_terms": [
+        "hvetemel"
+      ]
+    },
+    {
+      "key": "canned_tomatoes",
+      "label": "Hakkede tomater",
+      "tier": "supporting",
+      "form_hint": "as_sold",
+      "roles": [
+        "cooking_base"
+      ],
+      "mvt_search_terms": [
+        "tomater, hermetisk",
+        "tomat, hermetisk"
+      ]
+    },
+    {
+      "key": "tomato_paste",
+      "label": "Tomatpuré",
+      "tier": "supporting",
+      "form_hint": "as_sold",
+      "roles": [
+        "cooking_base"
+      ],
+      "mvt_search_terms": [
+        "tomatpuré"
+      ]
+    },
+    {
+      "key": "pasta_sauce",
+      "label": "Pastasaus",
+      "tier": "supporting",
+      "form_hint": "as_sold",
+      "roles": [
+        "cooking_base"
+      ],
+      "mvt_search_terms": [
+        "pastasaus"
+      ]
+    },
+    {
+      "key": "pesto",
+      "label": "Pesto",
+      "tier": "supporting",
+      "form_hint": "as_sold",
+      "roles": [
+        "cooking_base",
+        "calorie_booster"
+      ],
+      "mvt_search_terms": [
+        "pesto"
+      ]
+    },
+    {
+      "key": "coconut_milk",
+      "label": "Kokosmelk",
+      "tier": "supporting",
+      "form_hint": "as_sold",
+      "roles": [
+        "cooking_base",
+        "calorie_booster"
+      ],
+      "mvt_search_terms": [
+        "kokosmelk"
+      ]
+    },
+    {
+      "key": "stock",
+      "label": "Buljong",
+      "tier": "supporting",
+      "form_hint": "as_sold",
+      "roles": [
+        "cooking_base"
+      ],
+      "mvt_search_terms": [
+        "buljong"
+      ]
+    },
+    {
+      "key": "olive_oil",
+      "label": "Olivenolje",
+      "tier": "supporting",
+      "form_hint": "as_sold",
+      "roles": [
+        "cooking_base",
+        "calorie_booster"
+      ],
+      "mvt_search_terms": [
+        "olivenolje"
+      ]
+    },
+    {
+      "key": "rapeseed_oil",
+      "label": "Rapsolje",
+      "tier": "supporting",
+      "form_hint": "as_sold",
+      "roles": [
+        "cooking_base",
+        "calorie_booster"
+      ],
+      "mvt_search_terms": [
+        "rapsolje"
+      ]
+    },
+    {
+      "key": "honey",
+      "label": "Honning",
+      "tier": "supporting",
+      "form_hint": "as_sold",
+      "roles": [
+        "calorie_booster"
+      ],
+      "mvt_search_terms": [
+        "honning"
+      ]
+    },
+    {
+      "key": "mixed_nuts",
+      "label": "Nøtter",
+      "tier": "supporting",
+      "form_hint": "as_sold",
+      "roles": [
+        "calorie_booster"
+      ],
+      "mvt_search_terms": [
+        "nøtter",
+        "nøtteblanding"
+      ]
+    },
+    {
+      "key": "almonds",
+      "label": "Mandler",
+      "tier": "supporting",
+      "form_hint": "as_sold",
+      "roles": [
+        "calorie_booster"
+      ],
+      "mvt_search_terms": [
+        "mandler"
+      ]
+    },
+    {
+      "key": "walnuts",
+      "label": "Valnøtter",
+      "tier": "supporting",
+      "form_hint": "as_sold",
+      "roles": [
+        "calorie_booster"
+      ],
+      "mvt_search_terms": [
+        "valnøtter"
+      ]
+    },
+    {
+      "key": "cashews",
+      "label": "Cashewnøtter",
+      "tier": "supporting",
+      "form_hint": "as_sold",
+      "roles": [
+        "calorie_booster"
+      ],
+      "mvt_search_terms": [
+        "cashewnøtter"
+      ]
+    },
+    {
+      "key": "chia_seeds",
+      "label": "Chiafrø",
+      "tier": "supporting",
+      "form_hint": "dry",
+      "roles": [
+        "calorie_booster"
+      ],
+      "mvt_search_terms": [
+        "chiafrø"
+      ]
+    },
+    {
+      "key": "sesame_seeds",
+      "label": "Sesamfrø",
+      "tier": "supporting",
+      "form_hint": "dry",
+      "roles": [
+        "calorie_booster"
+      ],
+      "mvt_search_terms": [
+        "sesamfrø"
+      ]
+    },
+    {
+      "key": "sunflower_seeds",
+      "label": "Solsikkekjerner",
+      "tier": "supporting",
+      "form_hint": "dry",
+      "roles": [
+        "calorie_booster"
+      ],
+      "mvt_search_terms": [
+        "solsikkefrø",
+        "solsikkekjerner"
+      ]
+    },
+    {
+      "key": "pumpkin_seeds",
+      "label": "Gresskarkjerner",
+      "tier": "supporting",
+      "form_hint": "dry",
+      "roles": [
+        "calorie_booster"
+      ],
+      "mvt_search_terms": [
+        "gresskarkjerner",
+        "gresskarfrø"
+      ]
+    },
+    {
+      "key": "flax_seeds",
+      "label": "Linfrø",
+      "tier": "supporting",
+      "form_hint": "dry",
+      "roles": [
+        "calorie_booster"
+      ],
+      "mvt_search_terms": [
+        "linfrø"
+      ]
+    },
+    {
+      "key": "chili",
+      "label": "Chili",
+      "tier": "supporting",
+      "form_hint": "raw",
+      "roles": [
+        "cooking_base"
+      ],
+      "mvt_search_terms": [
+        "chili"
+      ]
+    },
+    {
+      "key": "kale",
+      "label": "Grønnkål",
+      "tier": "supporting",
+      "form_hint": "raw",
+      "roles": [
+        "vegetable"
+      ],
+      "mvt_search_terms": [
+        "grønnkål"
+      ]
+    },
+    {
+      "key": "kiwi_fruit",
+      "label": "Kiwi",
+      "tier": "supporting",
+      "form_hint": "raw",
+      "roles": [
+        "fruit_berries"
+      ],
+      "mvt_search_terms": [
+        "kiwi"
+      ]
+    },
+    {
+      "key": "green_beans",
+      "label": "Aspargesbønner",
+      "tier": "supporting",
+      "form_hint": "raw",
+      "roles": [
+        "vegetable"
+      ],
+      "mvt_search_terms": [
+        "aspargesbønner",
+        "grønne bønner"
+      ]
+    },
+    {
+      "key": "feta",
+      "label": "Fetaost",
+      "tier": "supporting",
+      "form_hint": "as_sold",
+      "roles": [
+        "supporting_protein",
+        "calorie_booster"
+      ],
+      "mvt_search_terms": [
+        "feta"
+      ]
+    },
+    {
+      "key": "creme_fraiche",
+      "label": "Crème fraîche",
+      "tier": "supporting",
+      "form_hint": "as_sold",
+      "roles": [
+        "cooking_base",
+        "calorie_booster"
+      ],
+      "mvt_search_terms": [
+        "crème fraîche",
+        "creme fraiche"
+      ]
+    },
+    {
+      "key": "parmesan",
+      "label": "Parmesan",
+      "tier": "supporting",
+      "form_hint": "as_sold",
+      "roles": [
+        "supporting_protein",
+        "calorie_booster"
+      ],
+      "mvt_search_terms": [
+        "parmesan",
+        "parmigiano"
+      ]
+    },
+    {
+      "key": "peanuts",
+      "label": "Peanøtter",
+      "tier": "supporting",
+      "form_hint": "as_sold",
+      "roles": [
+        "calorie_booster"
+      ],
+      "mvt_search_terms": [
+        "peanøtter"
+      ]
+    },
+    {
+      "key": "cooked_ham",
+      "label": "Kokt skinke",
+      "tier": "supporting",
+      "form_hint": "as_sold",
+      "roles": [
+        "sandwich_topping",
+        "supporting_protein"
+      ],
+      "mvt_search_terms": [
+        "skinke, kokt",
+        "kokt skinke"
+      ]
+    },
+    {
+      "key": "liver_pate",
+      "label": "Leverpostei",
+      "tier": "supporting",
+      "form_hint": "as_sold",
+      "roles": [
+        "sandwich_topping"
+      ],
+      "mvt_search_terms": [
+        "leverpostei"
+      ]
+    },
+    {
+      "key": "salami",
+      "label": "Salami",
+      "tier": "occasional",
+      "form_hint": "as_sold",
+      "roles": [
+        "sandwich_topping"
+      ],
+      "mvt_search_terms": [
+        "salami"
+      ]
+    },
+    {
+      "key": "cured_ham",
+      "label": "Spekeskinke",
+      "tier": "occasional",
+      "form_hint": "as_sold",
+      "roles": [
+        "sandwich_topping",
+        "supporting_protein"
+      ],
+      "mvt_search_terms": [
+        "spekeskinke"
+      ]
+    },
+    {
+      "key": "chicken_cold_cuts",
+      "label": "Kyllingpålegg",
+      "tier": "supporting",
+      "form_hint": "as_sold",
+      "roles": [
+        "sandwich_topping",
+        "supporting_protein"
+      ],
+      "mvt_search_terms": [
+        "kyllingpålegg",
+        "kylling, pålegg"
+      ]
+    },
+    {
+      "key": "turkey_cold_cuts",
+      "label": "Kalkunpålegg",
+      "tier": "supporting",
+      "form_hint": "as_sold",
+      "roles": [
+        "sandwich_topping",
+        "supporting_protein"
+      ],
+      "mvt_search_terms": [
+        "kalkunpålegg",
+        "kalkunfilet"
+      ]
+    },
+    {
+      "key": "bacon",
+      "label": "Bacon",
+      "tier": "occasional",
+      "form_hint": "as_sold",
+      "roles": [
+        "cooking_base",
+        "calorie_booster"
+      ],
+      "mvt_search_terms": [
+        "bacon"
+      ]
+    },
+    {
+      "key": "chicken_bacon",
+      "label": "Kyllingbacon",
+      "tier": "occasional",
+      "form_hint": "as_sold",
+      "roles": [
+        "cooking_base"
+      ],
+      "mvt_search_terms": [
+        "kyllingbacon"
+      ]
+    },
+    {
+      "key": "hot_dogs",
+      "label": "Grill- og wienerpølser",
+      "tier": "occasional",
+      "form_hint": "as_sold",
+      "roles": [
+        "main_meal_protein"
+      ],
+      "mvt_search_terms": [
+        "grillpølse",
+        "wienerpølse",
+        "pølse"
+      ]
+    },
+    {
+      "key": "meat_sausage",
+      "label": "Kjøttpølse",
+      "tier": "occasional",
+      "form_hint": "as_sold",
+      "roles": [
+        "main_meal_protein"
+      ],
+      "mvt_search_terms": [
+        "kjøttpølse"
+      ]
+    },
+    {
+      "key": "falukorv",
+      "label": "Falukorv",
+      "tier": "occasional",
+      "form_hint": "as_sold",
+      "roles": [
+        "main_meal_protein"
+      ],
+      "mvt_search_terms": [
+        "falukorv"
+      ]
+    },
+    {
+      "key": "turkey_sausage",
+      "label": "Kalkunkorv",
+      "tier": "occasional",
+      "form_hint": "as_sold",
+      "roles": [
+        "main_meal_protein"
+      ],
+      "mvt_search_terms": [
+        "kalkunkorv",
+        "kalkunpølse"
+      ]
+    },
+    {
+      "key": "meatballs",
+      "label": "Kjøttboller",
+      "tier": "occasional",
+      "form_hint": "as_sold",
+      "roles": [
+        "main_meal_protein"
+      ],
+      "mvt_search_terms": [
+        "kjøttboller"
+      ]
+    },
+    {
+      "key": "karbonader",
+      "label": "Karbonader",
+      "tier": "occasional",
+      "form_hint": "as_sold",
+      "roles": [
+        "main_meal_protein"
+      ],
+      "mvt_search_terms": [
+        "karbonader"
+      ]
+    },
+    {
+      "key": "beef_burger",
+      "label": "Hamburger",
+      "tier": "occasional",
+      "form_hint": "as_sold",
+      "roles": [
+        "main_meal_protein"
+      ],
+      "mvt_search_terms": [
+        "hamburger"
+      ]
+    },
+    {
+      "key": "fish_cakes",
+      "label": "Fiskekaker",
+      "tier": "supporting",
+      "form_hint": "as_sold",
+      "roles": [
+        "main_meal_protein"
+      ],
+      "mvt_search_terms": [
+        "fiskekaker"
+      ]
+    },
+    {
+      "key": "fish_fingers",
+      "label": "Fiskepinner",
+      "tier": "occasional",
+      "form_hint": "as_sold",
+      "roles": [
+        "main_meal_protein"
+      ],
+      "mvt_search_terms": [
+        "fiskepinner"
+      ]
+    },
+    {
+      "key": "fish_pudding",
+      "label": "Fiskepudding",
+      "tier": "occasional",
+      "form_hint": "as_sold",
+      "roles": [
+        "main_meal_protein"
+      ],
+      "mvt_search_terms": [
+        "fiskepudding"
+      ]
+    },
+    {
+      "key": "fish_burger",
+      "label": "Fiskeburger",
+      "tier": "occasional",
+      "form_hint": "as_sold",
+      "roles": [
+        "main_meal_protein"
+      ],
+      "mvt_search_terms": [
+        "fiskeburger"
+      ]
+    },
+    {
+      "key": "smoked_salmon",
+      "label": "Røkt laks",
+      "tier": "occasional",
+      "form_hint": "as_sold",
+      "roles": [
+        "sandwich_topping",
+        "supporting_protein"
+      ],
+      "mvt_search_terms": [
+        "laks, røkt"
+      ]
+    },
+    {
+      "key": "tuna_in_oil",
+      "label": "Tunfisk i olje",
+      "tier": "supporting",
+      "form_hint": "as_sold",
+      "roles": [
+        "quick_protein"
+      ],
+      "mvt_search_terms": [
+        "tunfisk, i olje"
+      ]
+    },
+    {
+      "key": "bread",
+      "label": "Grovbrød",
+      "tier": "supporting",
+      "form_hint": "as_sold",
+      "roles": [
+        "bread_base",
+        "carb_base"
+      ],
+      "mvt_search_terms": [
+        "brød, grovt",
+        "grovbrød"
+      ]
+    },
+    {
+      "key": "white_bread",
+      "label": "Loff",
+      "tier": "occasional",
+      "form_hint": "as_sold",
+      "roles": [
+        "bread_base",
+        "carb_base"
+      ],
+      "mvt_search_terms": [
+        "loff"
+      ]
+    },
+    {
+      "key": "bread_rolls",
+      "label": "Rundstykker",
+      "tier": "supporting",
+      "form_hint": "as_sold",
+      "roles": [
+        "bread_base",
+        "carb_base"
+      ],
+      "mvt_search_terms": [
+        "rundstykke"
+      ]
+    },
+    {
+      "key": "crispbread",
+      "label": "Knekkebrød",
+      "tier": "supporting",
+      "form_hint": "as_sold",
+      "roles": [
+        "bread_base",
+        "carb_base"
+      ],
+      "mvt_search_terms": [
+        "knekkebrød",
+        "flatbrød"
+      ]
+    },
+    {
+      "key": "tortillas",
+      "label": "Tortilla",
+      "tier": "supporting",
+      "form_hint": "as_sold",
+      "roles": [
+        "bread_base",
+        "carb_base"
+      ],
+      "mvt_search_terms": [
+        "tortilla"
+      ]
+    },
+    {
+      "key": "polar_bread",
+      "label": "Polarbrød",
+      "tier": "supporting",
+      "form_hint": "as_sold",
+      "roles": [
+        "bread_base",
+        "carb_base"
+      ],
+      "mvt_search_terms": [
+        "polarbrød",
+        "lompe",
+        "brød, myk"
+      ]
+    },
+    {
+      "key": "granola",
+      "label": "Granola og müsli",
+      "tier": "supporting",
+      "form_hint": "as_sold",
+      "roles": [
+        "carb_base"
+      ],
+      "mvt_search_terms": [
+        "granola",
+        "müsli"
+      ]
+    },
+    {
+      "key": "butter",
+      "label": "Smør",
+      "tier": "supporting",
+      "form_hint": "as_sold",
+      "roles": [
+        "sandwich_topping",
+        "calorie_booster"
+      ],
+      "mvt_search_terms": [
+        "smør",
+        "meierismør"
+      ]
+    },
+    {
+      "key": "margarine",
+      "label": "Margarin",
+      "tier": "supporting",
+      "form_hint": "as_sold",
+      "roles": [
+        "sandwich_topping",
+        "calorie_booster"
+      ],
+      "mvt_search_terms": [
+        "margarin"
+      ]
+    },
+    {
+      "key": "brown_cheese",
+      "label": "Brunost",
+      "tier": "supporting",
+      "form_hint": "as_sold",
+      "roles": [
+        "sandwich_topping"
+      ],
+      "mvt_search_terms": [
+        "brunost",
+        "fløtemysost",
+        "geitost"
+      ]
+    },
+    {
+      "key": "cream_cheese",
+      "label": "Kremost",
+      "tier": "supporting",
+      "form_hint": "as_sold",
+      "roles": [
+        "sandwich_topping"
+      ],
+      "mvt_search_terms": [
+        "kremost",
+        "smøreost"
+      ]
+    },
+    {
+      "key": "yoghurt_flavoured",
+      "label": "Yoghurt med smak",
+      "tier": "supporting",
+      "form_hint": "as_sold",
+      "roles": [
+        "supporting_protein"
+      ],
+      "mvt_search_terms": [
+        "yoghurt, med frukt",
+        "yoghurt, med smak"
+      ]
+    },
+    {
+      "key": "jam",
+      "label": "Syltetøy",
+      "tier": "supporting",
+      "form_hint": "as_sold",
+      "roles": [
+        "sandwich_topping"
+      ],
+      "mvt_search_terms": [
+        "syltetøy"
+      ]
+    },
+    {
+      "key": "caviar",
+      "label": "Kaviar",
+      "tier": "supporting",
+      "form_hint": "as_sold",
+      "roles": [
+        "sandwich_topping"
+      ],
+      "mvt_search_terms": [
+        "kaviar"
+      ]
+    },
+    {
+      "key": "mayonnaise",
+      "label": "Majones",
+      "tier": "occasional",
+      "form_hint": "as_sold",
+      "roles": [
+        "calorie_booster"
+      ],
+      "mvt_search_terms": [
+        "majones"
       ]
     }
   ],
