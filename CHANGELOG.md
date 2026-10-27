@@ -1,6 +1,12 @@
 # Changelog
 
-Chronological engineering milestones through **25 October 2026**, recorded by implementation/merge date. The public engineering code snapshot was curated on 23 October; updates on 25 October align public descriptions with the accepted private documentation. Earlier entries describe engineering history, **not** separately replayed Git commits or externally available datasets.
+Chronological engineering milestones through **27 October 2026**, recorded by implementation/merge date. The public engineering code snapshot was curated on 23 October; updates on 25 October align public descriptions with the accepted private documentation. Earlier entries describe engineering history, **not** separately replayed Git commits or externally available datasets.
+
+## 27 October 2026 — Public offline product candidate evidence
+
+- Publish selected offline-only TASK-069/TASK-070-style candidate comparison logic. It normalizes supplied provider-shaped examples, compares pack/brand/name matches, and flags nutrition discrepancies without provider calls or private result files.
+- Add fictional regression tests and run them in public CI.
+- Clarify that the included review-interface screenshot is a synthetic demonstration of implemented reviewer controls.
 
 ## 25 October 2026 — NutriValue identity and documentation alignment
 

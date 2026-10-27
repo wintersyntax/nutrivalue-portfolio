@@ -13,10 +13,11 @@ This directory contains a curated public snapshot of real NutriValue engineering
 | `src/nutrivalue/promotion_review_web.py` | Local browser-based review, using archived page images and statuses |
 | `src/nutrivalue/review_service.py`, `review_log.py` | Authenticated WSGI review and append-only, replay-safe decision records |
 | `src/nutrivalue/sku_nutrition_review.py`, `gtin.py` | Product-identity and nutrition evidence guards |
+| `src/nutrivalue/product_candidates.py` | Offline-only evidence scoring from supplied fictional provider-shaped data |
 | `src/nutrivalue/offer_database.py`, `weekly_pipeline.py` | Versioned weekly imports, completeness and history |
 | `analytics/` | 33 SQL schemas and review/coverage/promotion/history queries |
 | `scripts/` | 45 inspection, review, import, bounded-capture and pilot CLI scripts |
-| `tests/` | 66 selected engineering regression files; check each test's fixtures and optional services |
+| `tests/` | 67 selected engineering regression files; check each test's fixtures and optional services |
 | `research/rema_flyer_2026/` | 32 historical OCR and layout experiment programs/tests from W40–W43 |
 | `data/reference/food_roles.json` | Curated generic food-role vocabulary (not a personal inventory) |
 
@@ -36,6 +37,7 @@ To inspect the larger engine without private inputs or making requests:
 python3 -m compileall -q engine/src engine/scripts engine/tests engine/research
 PYTHONPATH=engine/src python3 -m unittest discover -s engine/tests -p test_pricing.py -v
 PYTHONPATH=engine/src python3 -m unittest discover -s engine/tests -p test_gtin.py -v
+PYTHONPATH=engine/src python3 -m unittest discover -s engine/tests -p test_product_candidates.py -v
 ```
 
 Not all engine tests are portable without their synthetic fixtures, optional dependencies, archived source-capture data and configuration. **Do not infer complete test-suite or live-pipeline health from the presence of test files**. For live/hosted modes, the original build used optional Google Storage and OAuth packages as well as OCR toolchains; this public code is not an out-of-the-box production setup.
@@ -54,4 +56,4 @@ The architecture and detailed review workflow are documented in [Architecture & 
 
 ## Public data boundaries
 
-No genuine retailer captures, image scans, private historical offer databases, receipts, personal inventory, account IDs, tokens or infrastructure settings are intentionally bundled. Historical OCR experiments are **source only**, not benchmark datasets or a production quality claim. A synthetic screenshot, if added later, must be clearly marked as fictional and must depict the features that actually exist.
+No genuine retailer captures, image scans, private historical offer databases, receipts, personal inventory, account IDs, tokens or infrastructure settings are intentionally bundled. Historical OCR experiments are **source only**, not benchmark datasets or a production quality claim. The included screenshot demonstrates reviewer controls with synthetic example content, not real retailer evidence.

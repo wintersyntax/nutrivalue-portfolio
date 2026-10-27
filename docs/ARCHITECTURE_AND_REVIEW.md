@@ -102,9 +102,9 @@ The local review tool is implemented in `src/nutrivalue/promotion_review_web.py`
 
 The hosted variant in `review_service.py` has an allowlisted Google account and signed session cookie. It writes a **new immutable decision object**, rather than directly editing the cloud database; a later replay validates the decision against its actual extraction/page/item and applies it once. **A review decision does not independently verify a current price at a specific store.**
 
-### A synthetic screenshot
+### Synthetic review screenshot
 
-A screenshot for the portfolio should be visibly captioned **“Synthetic review demonstration — fictional page, prices and products”**. Suggested layout: source page image at left; extraction evidence and the two model answers in the middle; candidate status, source conditions and review buttons at right. Do not depict automatic verified SKU linking, final live price rankings, or production coverage that this review tool does not establish.
+The portfolio README includes a synthetic demonstration of the implemented reviewer controls. The illustrated products, prices and model interpretations are examples, not actual retailer observations or verified checkout prices. The image does not establish automatic verified SKU linking, extraction accuracy or production coverage.
 
 ## What makes the workflow conservative
 

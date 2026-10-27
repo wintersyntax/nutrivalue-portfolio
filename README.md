@@ -17,7 +17,7 @@ NutriValue is a personal data-engineering and applied-AI project. It explores ho
 
 The engineering challenge is not just fetching prices. A catalogue may show a member discount, a multibuy offer, a previous price, a price per kilogram, an assortment badge, or incomplete OCR. Matvaretabellen may describe a generic food rather than the branded SKU being sold. NutriValue keeps these facts separate and makes uncertainty **visible** instead of silently manufacturing a convincing but unsupported result.
 
-**This is a code portfolio, not just a concept document.** The repository publishes a curated, substantial snapshot of actual Python, SQL, reviewer, OCR-research and test code alongside a small, offline, fully synthetic demo. The review-interface screenshot below shows a historical retailer catalogue page, not synthetic data. Raw provider responses, full flyer archives, personal datasets, credentials and owner-specific infrastructure configuration are not published.
+**This is a code portfolio, not just a concept document.** The repository publishes a curated, substantial snapshot of actual Python, SQL, reviewer, OCR-research and test code alongside a small, offline, fully synthetic demo. The review-interface screenshot below uses synthetic demonstration content to illustrate the implemented review controls; it is not a live retailer observation. Raw provider responses, full flyer archives, personal datasets, credentials and owner-specific infrastructure configuration are not published.
 
 ## What it does
 
@@ -30,6 +30,7 @@ The engineering challenge is not just fetching prices. A catalogue may show a me
 | Model-assisted promotion extraction | Strict structured outputs, two-model comparison, source/OCR cross-checks, budgeted benchmarks | Model agreement is not a reference answer |
 | Human offer review | Web/terminal review flows, evidence display, explicit decisions and replay-safe logs | Human approval of a page offer does not verify store price |
 | Weekly offer history | SQL schemas and queries for imported source-only runs, coverage, promotion monitoring and history | Genuine private/provider data are **not distributed** |
+| Offline product candidate matching | Adapted TASK-069/TASK-070 scoring of supplied NGData/Kassalapp-shaped data, pack and brand comparisons, and nutrition flags | Experimental review aid only: no live lookups, confirmed identities or verified prices |
 | Nutrition and protein economics | Generic nutrition schemas, GTIN guardrails, SKU review, Decimal NOK per protein | No independently verified real current-store price ranking |
 | Meal planning, inventory and approved handoff | Defined, reviewed-first path to versioned recipes, deterministic 3+4-day proposals, package-level shopping, stock snapshots and optional Mealie sync | **Planned**, not shipped; no Grocy, Mealie or TickTick integration is active |
 
@@ -124,9 +125,9 @@ This diagram separates **implemented source processing**, **human-review operati
 
 ## Offer review: the human in the loop
 
-![NutriValue promotion-review interface with model comparisons and a historical MENY flyer](assets/promotion-review-interface.png)
+![Synthetic NutriValue offer-review demonstration showing model comparisons and reviewer controls](assets/promotion-review-interface.png)
 
-*Actual NutriValue promotion-review interface (October 2026). The screenshot includes a historical MENY catalogue page and model interpretations; it is not a synthetic illustration or proof of verified store prices. Catalogue artwork belongs to its respective rights holders.*
+*Synthetic demonstration of NutriValue's implemented promotion-review interface (October 2026). The displayed products, prices and model interpretations are illustrative; the image does not establish real retailer observations, verified checkout prices or measured extraction accuracy.*
 
 NutriValue has a real review workflow, not a generic “AI detects everything” claim. The interface is implemented in [promotion_review_web.py](engine/src/nutrivalue/promotion_review_web.py) and its [CLI launcher](engine/scripts/review_promotions_web.py), with a hosted variant in [review_service.py](engine/src/nutrivalue/review_service.py).
 
@@ -155,9 +156,10 @@ The engine code is intentionally accessible in the repository rather than hidden
 | [engine/src/nutrivalue/review_log.py](engine/src/nutrivalue/review_log.py) | Append-only decision schema, validation and replay |
 | [engine/src/nutrivalue/offer_database.py](engine/src/nutrivalue/offer_database.py) | Weekly import and source-only persistence |
 | [engine/src/nutrivalue/gtin.py](engine/src/nutrivalue/gtin.py) | Product identifier guardrails |
+| [engine/src/nutrivalue/product_candidates.py](engine/src/nutrivalue/product_candidates.py) | Offline-only candidate parsing and scoring with [synthetic tests](engine/tests/test_product_candidates.py) |
 | [engine/analytics](engine/analytics) | 33 production-oriented SQL schema and analytic source files |
 | [engine/research/rema_flyer_2026](engine/research/rema_flyer_2026) | 32 OCR experiments and reference test programs across W40–W43 |
-| [engine/tests](engine/tests) | 66 selected engineering test files across parsing, promotion handling, stores, SQL and identity |
+| [engine/tests](engine/tests) | 67 selected engineering test files across parsing, promotion handling, stores, SQL and identity |
 
 [Read the source tour and optional dependencies](engine/README.md).
 
@@ -183,6 +185,7 @@ To inspect the larger source tree without capturing offers:
 ```bash
 python3 -m compileall -q engine/src engine/scripts engine/tests engine/research
 PYTHONPATH=engine/src python3 -m unittest discover -s engine/tests -p test_gtin.py -v
+PYTHONPATH=engine/src python3 -m unittest discover -s engine/tests -p test_product_candidates.py -v
 ```
 
 The full `engine/tests` collection is **not** advertised as entirely standalone: some tests depend on local archived evidence, optional packages or historical experimental fixtures. [Portfolio validation](.github/workflows/portfolio-ci.yml) checks the offline release and selected portable contracts.
@@ -208,6 +211,6 @@ Three important limitations remain: printed-price OCR needs stronger reference a
 
 ## Privacy, rights and reproducibility
 
-This portfolio intentionally excludes private offer databases, provider payloads, original flyer imagery, personal shopping/inventory files, owner-linked deployment details, credentials and tokens. **No personal meal-prep parameters, health/training notes or household inventory records from the private documentation are reproduced here.** A synthetic UI image may be added only when it accurately reflects the real review workflow and is visibly labelled fictional. Sources must be used under their relevant conditions; availability in a private account is not permission to redistribute raw content.
+This portfolio intentionally excludes private offer databases, provider payloads, original flyer imagery, personal shopping/inventory files, owner-linked deployment details, credentials and tokens. **No personal meal-prep parameters, health/training notes or household inventory records from the private documentation are reproduced here.** The included synthetic review screenshot illustrates implemented reviewer controls with example data, not real offer evidence. Sources must be used under their relevant conditions; availability in a private account is not permission to redistribute raw content.
 
 [Changelog](CHANGELOG.md) · [Architecture and offer review](docs/ARCHITECTURE_AND_REVIEW.md) · [Engineering source guide](engine/README.md) · [Development status](docs/DEVELOPMENT_SNAPSHOT.md) · [Product roadmap](docs/PRODUCT_VISION.md)
