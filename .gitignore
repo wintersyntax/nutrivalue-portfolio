@@ -1,0 +1,40 @@
+# Local environment and credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.p12
+*.pfx
+*.key
+id_rsa
+id_ed25519
+.secrets/
+secrets/
+
+# Private/provider evidence and generated local data
+data/private/
+data/raw/
+data/downloads/
+data/demo.sqlite3
+*.sqlite
+*.sqlite3
+*.sqlite3-*
+*.db
+*.db-*
+*.jsonl
+*.ndjson
+*.ndjson.gz
+reports/private/
+coverage/
+
+# Python and build artifacts
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+dist/
+build/
+.DS_Store
