@@ -15,7 +15,9 @@ CREATE TABLE IF NOT EXISTS food_role_assignments (
   food_key TEXT NOT NULL REFERENCES food_role_items(food_key),
   role TEXT NOT NULL CHECK (
     role IN ('main_meal_protein','breakfast_protein','quick_protein',
-             'supporting_protein','carb_base','calorie_booster','freezer_helper')),
+             'supporting_protein','carb_base','calorie_booster','freezer_helper',
+             'fruit_berries','vegetable','cooking_base',
+             'bread_base','sandwich_topping')),
   PRIMARY KEY (food_key, role)
 );
 

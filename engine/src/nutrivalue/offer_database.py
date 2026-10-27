@@ -15,7 +15,7 @@ import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
 
-from nutrivalue.offer_categories import classify_offer
+from nutrivalue.offer_categories import TAXONOMY_VERSION, classify_offer, pack_grams
 from nutrivalue.providers.tjek_offer_conditions import interpret_offer
 from nutrivalue.providers.tjek_offline import (
     CHAINS, MAX_FILE_BYTES, Snapshot, TjekSnapshotError, insert_snapshot, parse_snapshot,
@@ -190,13 +190,8 @@ def import_run(run_dir: Path, db_path: Path, schema_dir: Path) -> dict:
                                     int(bool(LIMITED_STOCK.search(
                                         f"{heading} {description or ''}"))),
                                     json.dumps(cond["review_reasons"])))
-                        cat = classify_offer(heading, description)
-                        db.execute("""INSERT OR IGNORE INTO tjek_offer_categories
-                                      VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
-                                   (sha, cid, oid, cat.taxonomy_version, cat.status,
-                                    cat.food_category, cat.food_key, cat.form, cat.reason,
-                                    json.dumps(list(cat.category_tags)), cat.offer_kind,
-                                    cat.tag_status))
+                        _insert_category(db, sha, cid, oid, classify_offer(
+                            heading, description, pack_grams(row[9], row[10], row[11])))
                     offers += len(snapshot.offers)
                 db.execute("""INSERT INTO tjek_run_chains VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
                            (run_id, record["dealer_id"], record["chain"], record["status"],
@@ -209,6 +204,47 @@ def import_run(run_dir: Path, db_path: Path, schema_dir: Path) -> dict:
                 raise OfferImportError("saved offers do not match manifest total")
     return {"run_id": run_id, "imported": True, "offers": offers,
             "chains": sum(1 for c in chains if c[1] is not None)}
+
+
+def _insert_category(db: sqlite3.Connection, sha: str, cid: str, oid: str, cat) -> None:
+    db.execute("""INSERT OR IGNORE INTO tjek_offer_categories
+                  VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
+               (sha, cid, oid, cat.taxonomy_version, cat.status,
+                cat.food_category, cat.food_key, cat.form, cat.reason,
+                json.dumps(list(cat.category_tags)), cat.offer_kind, cat.tag_status))
+
+
+def reclassify(db_path: Path) -> int:
+    """Add current-taxonomy categories for offers imported under an older one.
+
+    Append-only: earlier versions stay as they were and the views read the
+    newest version, so a classifier change (TASK-073 taxonomy v4) reaches
+    earlier weeks without touching their source rows. Returns rows added.
+    """
+    db_path = Path(db_path)
+    if not db_path.is_file():
+        return 0
+    with sqlite3.connect(db_path) as db:
+        if db.execute("SELECT 1 FROM sqlite_master WHERE type='table' "
+                      "AND name='tjek_offer_categories'").fetchone() is None:
+            return 0
+        rows = db.execute(
+            """SELECT o.snapshot_sha256, o.catalog_id, o.offer_id, o.heading, o.description,
+                      o.quantity, o.unit, o.pack_count
+               FROM tjek_offers o
+               WHERE EXISTS (SELECT 1 FROM tjek_offer_categories k
+                             WHERE k.snapshot_sha256=o.snapshot_sha256
+                               AND k.catalog_id=o.catalog_id AND k.offer_id=o.offer_id)
+                 AND NOT EXISTS (SELECT 1 FROM tjek_offer_categories k
+                                 WHERE k.snapshot_sha256=o.snapshot_sha256
+                                   AND k.catalog_id=o.catalog_id AND k.offer_id=o.offer_id
+                                   AND k.taxonomy_version=?)""",
+            (TAXONOMY_VERSION,)).fetchall()
+        with db:
+            for sha, cid, oid, heading, description, quantity, unit, count in rows:
+                _insert_category(db, sha, cid, oid, classify_offer(
+                    heading, description, pack_grams(quantity, unit, count)))
+    return len(rows)
 
 
 def discover_runs(weekly_root: Path) -> list[Path]:

@@ -209,14 +209,17 @@ def _restates_n_for_m(promo: dict, items: list[dict]) -> bool:
     """'3 for 2 - 33 % trekkes fra' is ONE deal: drop the percent restatement.
 
     A percent_off equal (within 1 point) to (n-m)/n of an n_for_m with the
-    same member flag and a largely shared scope is the same discount.
+    same member flag and a largely shared scope is the same discount. "Shared"
+    is measured as containment (shared words / words of the shorter scope): the
+    restatement usually adds "trekkes fra i kassen" while the badge adds "plukk
+    og miks", which kept W44 REMA "all kjeks" below a 0.5 Jaccard overlap.
     """
     if promo["kind"] != "percent_off":
         return False
     for other in items:
         if (other["kind"] == "n_for_m" and other["member_only"] == promo["member_only"]
                 and abs(100 * (other["n"] - other["m"]) / other["n"] - promo["percent"]) <= 1
-                and scope_overlap(other["scope"], promo["scope"]) >= 0.5):
+                and scope_containment(other["scope"], promo["scope"]) >= 0.5):
             return True
     return False
 
@@ -238,6 +241,13 @@ def scope_overlap(a: str, b: str) -> float:
     if not left or not right:
         return 0.0
     return len(left & right) / len(left | right)
+
+
+def scope_containment(a: str, b: str) -> float:
+    left, right = _tokens(a), _tokens(b)
+    if not left or not right:
+        return 0.0
+    return len(left & right) / min(len(left), len(right))
 
 
 def score_page(reference: dict, predicted: dict | None) -> dict:

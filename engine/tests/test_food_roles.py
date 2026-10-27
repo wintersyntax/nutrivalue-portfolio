@@ -76,9 +76,9 @@ class FoodRolesTests(unittest.TestCase):
         return self.db.execute((QUERY_DIR / name).read_text()).fetchall()
 
     def test_reference_catalog_has_explicit_roles_and_no_old_prices(self):
-        self.assertEqual(len(self.payload["foods"]), 35)
+        self.assertEqual(len(self.payload["foods"]), 140)
         self.assertEqual(len(self.payload["substitutions"]), 24)
-        self.assertEqual(len({x["key"] for x in self.payload["foods"]}), 35)
+        self.assertEqual(len({x["key"] for x in self.payload["foods"]}), 140)
         for item in self.payload["foods"]:
             self.assertNotIn("price", item)
             self.assertNotIn("protein_per_100g", item)
@@ -94,7 +94,7 @@ class FoodRolesTests(unittest.TestCase):
         self.assertEqual(self.db.total_changes, first)
         self.assertEqual(
             self.db.execute("SELECT COUNT(*) FROM food_role_items").fetchone()[0],
-            35,
+            140,
         )
         self.assertEqual(
             self.db.execute(
@@ -112,7 +112,7 @@ class FoodRolesTests(unittest.TestCase):
             "Partial substitution only: lentils add carbohydrate and fiber.",
         )
         report = self.sql("food_roles_overview.sql")
-        self.assertEqual(len(report), 35)
+        self.assertEqual(len(report), 140)
         self.assertIn("quick_protein", next(
             r[4] for r in report if r[0] == "tuna_drained"
         ))
@@ -235,7 +235,7 @@ class FoodRolesTests(unittest.TestCase):
                 result = conn.execute(
                     "SELECT COUNT(*) FROM food_role_items"
                 ).fetchone()[0]
-            self.assertEqual(result, 35)
+            self.assertEqual(result, 140)
 
 
 if __name__ == "__main__":

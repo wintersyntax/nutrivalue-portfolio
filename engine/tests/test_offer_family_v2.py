@@ -15,7 +15,7 @@ from nutrivalue.offer_categories import (
 
 class ProductFamilyV2Tests(unittest.TestCase):
     def test_version_and_product_families_use_reviewed_broad_tags_only(self):
-        self.assertEqual(TAXONOMY_VERSION, 3)
+        self.assertEqual(TAXONOMY_VERSION, 6)
         self.assertIn("snacks", CATEGORIES)
         self.assertIn("sweets", CATEGORIES)
         self.assertTrue(all(category in CATEGORIES for category, _, _ in PRODUCT_FAMILIES))
@@ -111,7 +111,13 @@ class ProductFamilyV2Tests(unittest.TestCase):
                 result = classify_offer(title)
                 self.assertEqual(result.status, "needs_review")
                 self.assertEqual(result.food_category, cat)
-                self.assertIsNone(result.food_key)
+                self.assertEqual(
+                    result.food_key,
+                    {
+                        "FISKEPINNER": "fish_fingers",
+                        "FISKEBURGER PAPRIKA": "fish_burger",
+                    }.get(title),
+                )
 
         for title in ("LAMMEBOG", "KYLLINGKJØTTDEIG", "SVINEKNOKE"):
             with self.subTest(title=title):
@@ -124,7 +130,10 @@ class ProductFamilyV2Tests(unittest.TestCase):
                 result = classify_offer(title)
                 self.assertEqual(result.food_category, "meat")
                 self.assertEqual(result.form, "processed")
-                self.assertIsNone(result.food_key)
+                self.assertEqual(
+                    result.food_key,
+                    "salami" if title == "SALAMI" else None,
+                )
 
     def test_ambiguous_brand_selection_does_not_infer_sku(self):
         for title in ("UKENS TILBUD", "PAKKEDEAL", "ET UTVALG DIVERSE VARER"):
@@ -132,8 +141,7 @@ class ProductFamilyV2Tests(unittest.TestCase):
                 result = classify_offer(title)
                 self.assertEqual(result.status, "unmapped")
                 self.assertIsNone(result.food_key)
-        for title in ("BIG ONE PIZZA", "TORO FERDIGRETTER", "SALAMI MILANO",
-                      "KYLLING LÅRFILET"):
+        for title in ("BIG ONE PIZZA", "TORO FERDIGRETTER"):
             with self.subTest(title=title):
                 result = classify_offer(title)
                 self.assertIsNone(result.food_key)

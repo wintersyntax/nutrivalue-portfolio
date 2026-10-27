@@ -17,7 +17,7 @@ This directory contains a curated public snapshot of real NutriValue engineering
 | `src/nutrivalue/offer_database.py`, `weekly_pipeline.py` | Versioned weekly imports, completeness and history |
 | `analytics/` | 33 SQL schemas and review/coverage/promotion/history queries |
 | `scripts/` | 45 inspection, review, import, bounded-capture and pilot CLI scripts |
-| `tests/` | 67 selected engineering regression files; check each test's fixtures and optional services |
+| `tests/` | 68 selected engineering regression files; check each test's fixtures and optional services |
 | `research/rema_flyer_2026/` | 32 historical OCR and layout experiment programs/tests from W40–W43 |
 | `data/reference/food_roles.json` | Curated generic food-role vocabulary (not a personal inventory) |
 
@@ -57,3 +57,8 @@ The architecture and detailed review workflow are documented in [Architecture & 
 ## Public data boundaries
 
 No genuine retailer captures, image scans, private historical offer databases, receipts, personal inventory, account IDs, tokens or infrastructure settings are intentionally bundled. Historical OCR experiments are **source only**, not benchmark datasets or a production quality claim. The included screenshot demonstrates reviewer controls with synthetic example content, not real retailer evidence.
+
+
+### Taxonomy v6 and promotion normalization
+
+The published offline engine includes a 140-food generic vocabulary, processed-food and ready-meal safeguards, and a promotion-restatement filter. These algorithms do not establish verified product identities, store prices or measured extraction accuracy.

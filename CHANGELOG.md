@@ -2,6 +2,12 @@
 
 Chronological engineering milestones through **27 October 2026**, recorded by implementation/merge date. The public engineering code snapshot was curated on 23 October; updates on 25 October align public descriptions with the accepted private documentation. Earlier entries describe engineering history, **not** separately replayed Git commits or externally available datasets.
 
+## 27 October 2026 — Taxonomy v6 and W44 logic (public subset)
+
+- Expanded the public offline classifier to taxonomy v6, with 140 generic food definitions and append-only category migration.
+- Added scope-containment deduplication for n-for-m promotions and equivalent percentage restatements.
+- Public regression examples are synthetic. Real W44 catalogue captures, model results and owner review records are not included.
+
 ## 27 October 2026 — Public offline product candidate evidence
 
 - Publish selected offline-only TASK-069/TASK-070-style candidate comparison logic. It normalizes supplied provider-shaped examples, compares pack/brand/name matches, and flags nutrition discrepancies without provider calls or private result files.
