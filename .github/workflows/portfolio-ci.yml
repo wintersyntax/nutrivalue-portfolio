@@ -32,3 +32,4 @@ jobs:
         run: |
           python3 -m unittest discover -s engine/tests -p test_pricing.py -v
           python3 -m unittest discover -s engine/tests -p test_gtin.py -v
+          python3 -m unittest discover -s engine/tests -p test_product_candidates.py -v

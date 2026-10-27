@@ -1,6 +1,6 @@
 # Development status
 
-**25 October 2026 — public documentation synchronized to accepted private NutriValue scope (code snapshot curated 23 October)**
+**27 October 2026 — public documentation and offline candidate-evidence subset updated (original engine snapshot curated 23 October)**
 
 NutriValue is a code-focused Norwegian grocery intelligence portfolio. This repository now contains the actual Python engine source, SQL, review interface, import/review CLI scripts, tests and historical research experiments. The project is **more than the small standalone demo** at the root.
 
@@ -14,6 +14,7 @@ NutriValue is a code-focused Norwegian grocery intelligence portfolio. This repo
 | OCR/page experiments | `engine/src/nutrivalue/rema/` and `engine/research/rema_flyer_2026/` | Research-only; no scans or benchmark inputs redistributed |
 | Promotion processing | `engine/src/nutrivalue/promotion_extraction.py`, `page_promotions.py` and `promotion_crosscheck.py` | Source/promotion schemas and code included; external model calls need optional configuration |
 | Review UI | `engine/src/nutrivalue/promotion_review_web.py`, `review_service.py`, `review_log.py` | Actual interface logic included; running it needs a suitable existing database and review images |
+| Offline candidate evidence | `engine/src/nutrivalue/product_candidates.py`, `engine/tests/test_product_candidates.py` | Synthetic-only parsing, scoring and tests; no source requests or confirmed product matches |
 | Historical SQL | `engine/analytics/` (33 files) | Schemas, coverage, review and history queries inspectable |
 | Reference nutrition and identities | `engine/src/nutrivalue/gtin.py`, `sku_nutrition_review.py`, food-role vocabulary | No automatic real-world exact-SKU match |
 | Test source | `engine/tests/` (66 files) | Selected portable tests in public validation; not all experiments are standalone |
@@ -38,6 +39,6 @@ An actual verified protein-value comparison must establish the same exact SKU, q
 
 ## What comes next
 
-A fully synthetic review screenshot reflecting the real page and decision controls, wider portable engineering test coverage, an end-to-end synthetic offer/review replay, and eventually a measured indicative grocery advisor. NutriValue's future deterministic 3+4-day plan builder begins with reviewed, versioned recipes and whole-package shopping constraints. A later optional Grocy/Pantry Raider inventory snapshot is intended as the stock authority; Mealie handoff needs explicit owner approval. Neither Grocy, Mealie, TickTick/consumption integration nor any advanced multi-objective solver is operational.
+A wider portable engineering test suite, an end-to-end synthetic offer/review replay, and eventually a measured indicative grocery advisor. The README now includes a synthetic review screenshot reflecting the implemented controls. NutriValue's future deterministic 3+4-day plan builder begins with reviewed, versioned recipes and whole-package shopping constraints. A later optional Grocy/Pantry Raider inventory snapshot is intended as the stock authority; Mealie handoff needs explicit owner approval. Neither Grocy, Mealie, TickTick/consumption integration nor any advanced multi-objective solver is operational.
 
 See [README](../README.md), [Architecture & review](ARCHITECTURE_AND_REVIEW.md), [engine source tour](../engine/README.md) and [Changelog](../CHANGELOG.md).
