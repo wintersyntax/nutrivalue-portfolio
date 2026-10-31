@@ -40,18 +40,26 @@ def week_overview(db_path: Path, schema_dir: Path, week: str | None = None) -> d
                          (week,)).fetchone()
         ext_id = ext["extraction_id"]
         pages = {}
+        # TASK-079: each chain's pages come from its own latest extraction of the week.
         for row in db.execute("""SELECT p.*, r.decision AS page_decision FROM promo_pages p
+                                 JOIN v_week_chain_extraction x
+                                   ON x.extraction_id=p.extraction_id AND x.dealer_id=p.dealer_id
                                  LEFT JOIN v_promo_latest_review r
                                    ON r.extraction_id=p.extraction_id AND r.catalog_id=p.catalog_id
                                   AND r.page=p.page AND r.item_no IS NULL
-                                 WHERE p.extraction_id=?""", (ext_id,)):
+                                 WHERE x.week=?""", (week,)):
             pages[f"{row['catalog_id']}|{row['page']}"] = {
                 "catalog_id": row["catalog_id"], "page": row["page"], "chain": row["chain_name"],
                 "valid_from": row["valid_from"], "valid_to": row["valid_to"],
                 "has_hotspots": bool(row["has_hotspots"]), "page_status": row["page_status"],
                 "page_decision": row["page_decision"], "answers": {}}
-        for row in db.execute("""SELECT catalog_id, page, model, content FROM promo_answers
-                                 WHERE extraction_id=?""", (ext_id,)):
+        for row in db.execute("""SELECT a.catalog_id, a.page, a.model, a.content
+                                 FROM promo_answers a
+                                 JOIN promo_pages p ON p.extraction_id=a.extraction_id
+                                  AND p.catalog_id=a.catalog_id AND p.page=a.page
+                                 JOIN v_week_chain_extraction x
+                                   ON x.extraction_id=p.extraction_id AND x.dealer_id=p.dealer_id
+                                 WHERE x.week=?""", (week,)):
             try:
                 parsed = validate_output(row["content"] or "")
                 answer = {"page_class": parsed["page_class"],

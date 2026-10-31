@@ -5,9 +5,11 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from decimal import Decimal
+
 from nutrivalue.food_roles import (
-    FoodRoleError, load_catalog, reference_suggestions, seed_catalog,
-    validate_catalog,
+    FoodRoleError, approve_reference, approved_references, load_catalog,
+    reference_suggestions, seed_catalog, validate_catalog,
 )
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -117,6 +119,30 @@ class FoodRolesTests(unittest.TestCase):
             r[4] for r in report if r[0] == "tuna_drained"
         ))
 
+    def test_old_role_check_is_migrated_without_losing_rows(self):
+        # TASK-073: a database seeded before the three new roles keeps its rows.
+        old = SCHEMA.read_text().replace(
+            "'freezer_helper',\n             'fruit_berries','vegetable','cooking_base'",
+            "'freezer_helper'")
+        self.assertNotIn("cooking_base", old)
+        self.db.executescript(old)
+        self.db.execute("INSERT INTO food_role_items VALUES ('chicken_breast','Kyllingfilet',"
+                        "'core','raw')")
+        self.db.execute("INSERT INTO food_role_assignments VALUES "
+                        "('chicken_breast','main_meal_protein')")
+        with self.assertRaises(sqlite3.IntegrityError):
+            self.db.execute("INSERT INTO food_role_items VALUES ('banana','Banan',"
+                            "'supporting','raw')")
+            self.db.execute("INSERT INTO food_role_assignments VALUES ('banana','fruit_berries')")
+        self.db.execute("DELETE FROM food_role_items WHERE food_key='banana'")
+        seed_catalog(self.db, self.payload, SCHEMA)
+        roles = dict(self.db.execute(
+            "SELECT food_key, role FROM food_role_assignments "
+            "WHERE food_key IN ('chicken_breast','banana')").fetchall())
+        self.assertEqual(roles, {"chicken_breast": "main_meal_protein",
+                                 "banana": "fruit_berries"})
+        seed_catalog(self.db, self.payload, SCHEMA)          # idempotent after migration
+
     def test_substitution_is_directional_and_partial_lentils_are_flagged(self):
         seed_catalog(self.db, self.payload, SCHEMA)
         rows = self.sql("food_roles_substitutions.sql")
@@ -203,6 +229,32 @@ class FoodRolesTests(unittest.TestCase):
                          ("CNEW", "Kylling, bryst, filet, rå", 23.0, 105.0))
         self.assertEqual(rows[0][8],
                          "2026-10-10T00:00:00Z")
+
+    def test_owner_approval_is_pinned_insert_only_and_readable(self):
+        # TASK-070: one approval per key and snapshot; same again is a no-op.
+        seed_catalog(self.db, self.payload, SCHEMA)
+        query = QUERY_DIR / "food_roles_approved_reference.sql"
+        self.assertEqual(approved_references(self.db, query), {})
+        state = approve_reference(self.db, "chicken_breast", "CNEW", "synthetic review",
+                                  reviewed_at="2026-10-26T08:00:00Z")
+        self.assertEqual(state, "approved")
+        self.assertEqual(approve_reference(self.db, "chicken_breast", "CNEW", "again",
+                                           reviewed_at="2026-10-26T09:00:00Z"), "unchanged")
+        ref = approved_references(self.db, query)["chicken_breast"]
+        self.assertEqual((ref["mvt_food_id"], ref["form"], ref["protein_g"], ref["kcal"]),
+                         ("CNEW", "raw", Decimal("23.0"), Decimal("105.0")))
+        for bad in [("chicken_breast", "COOK", "other food"),        # no silent replacement
+                    ("chicken_breast_x", "CNEW", "unknown key"),
+                    ("skyr", "COLD", "old snapshot food"),
+                    ("skyr", "SKYR", " ")]:
+            with self.subTest(bad=bad), self.assertRaises(FoodRoleError):
+                approve_reference(self.db, *bad, reviewed_at="2026-10-26T08:00:00Z")
+        with self.assertRaises(FoodRoleError):
+            approve_reference(self.db, "skyr", "SKYR", "form", reviewed_at="x",
+                              approved_form="boiled")
+        self.assertEqual(approve_reference(self.db, "skyr", "SKYR", "ok", reviewed_at="t"),
+                         "approved")
+        self.assertEqual(approved_references(self.db, query)["skyr"]["form"], "as_sold")
 
     def test_foreign_keys_block_nonexistent_reference_and_empty_review(self):
         seed_catalog(self.db, self.payload, SCHEMA)

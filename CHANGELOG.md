@@ -1,6 +1,13 @@
 # Changelog
 
-Chronological engineering milestones through **27 October 2026**, recorded by implementation/merge date. The public engineering code snapshot was curated on 23 October; updates on 25 October align public descriptions with the accepted private documentation. Earlier entries describe engineering history, **not** separately replayed Git commits or externally available datasets.
+Chronological engineering milestones through **31 October 2026**, recorded by implementation/merge date. The public engineering code snapshot was curated on 23 October; updates on 25 October align public descriptions with the accepted private documentation. Earlier entries describe engineering history, **not** separately replayed Git commits or externally available datasets.
+
+## 31 October 2026 — Selective public sync and privacy guard
+
+- Add an explicitly configured GET-only Mealie recipe reader, local snapshot schemas and offline nutrition estimates with synthetic tests; remove the private instance default.
+- Publish per-chain weekly offer/promotion fallback and health SQL, invalid-offer isolation and quarantine-aware page selection.
+- Strengthen publication checks for unreviewed files, datasets, symlinks, hosted instance URLs and personal addresses; keep the synthetic screenshot hash unchanged.
+- Update PikaPods/Mealie architecture boundaries without publishing personal recipes, stock records, infrastructure or provider dumps.
 
 ## 27 October 2026 — Taxonomy v6 and W44 logic (public subset)
 

@@ -18,9 +18,9 @@ from decimal import Decimal
 from pathlib import Path
 
 from nutrivalue import promotion_crosscheck as xcheck
-from nutrivalue.offer_database import import_run
+from nutrivalue.offer_database import import_run, reclassify
 from nutrivalue.page_promotions import PROMPT_VERSION
-from nutrivalue.page_sets import run_pages
+from nutrivalue.page_sets import quarantined_chains, run_pages
 from nutrivalue.promotion_benchmark import result_path, run
 from nutrivalue.promotion_extraction import (
     PAIR, OcrLookup, build, crosscheck_plan, import_extraction, report, retry_candidates,
@@ -132,9 +132,27 @@ def spent_usd(out_dir: Path) -> str:
     return str(total)
 
 
+def missing_chains(collected: dict) -> dict:
+    """TASK-079: chains with no saved offers in this run (quarantine, no catalogue,
+    HTTP error, not attempted). Logged in the job summary so an e-mail alert can
+    name them; a whole store missing for a week must never pass silently."""
+    chains = collected.get("chains") or []
+    rows = [c for c in chains if not c.get("offers_saved")]
+    rejected = [c for c in chains if c.get("offers_rejected")]
+    return {"offers_rejected": sum(c["offers_rejected"] for c in rejected),
+            "offers_rejected_detail": "; ".join(
+                f"{c.get('chain') or c.get('dealer_id', '?')}: {c['offers_rejected']} "
+                f"({', '.join(c.get('rejected_reasons') or [])})" for c in rejected),
+            "chains_missing": ", ".join(c.get("chain") or c.get("dealer_id", "?") for c in rows),
+            "chains_missing_count": len(rows),
+            "chains_missing_reasons": "; ".join(
+                f"{c.get('chain') or c.get('dealer_id', '?')}: {c.get('status', 'unknown')}"
+                for c in rows)}
+
+
 def run_week(root: Path, *, mode: str, collect, catalogue: dict, client, cap_usd: Decimal,
              registry, schema_dir: Path, interval_s: float = 1.0, sleep=None,
-             ocr_reader=None, import_run_fn=import_run) -> dict:
+             ocr_reader=None, import_run_fn=import_run, reclassify_fn=reclassify) -> dict:
     """One weekly run under ``root``. ``collect(out_dir, allow_repeat)`` returns the
     collector report (scripts pass the bounded live Tjek collector)."""
     if mode not in MODES:
@@ -146,10 +164,13 @@ def run_week(root: Path, *, mode: str, collect, catalogue: dict, client, cap_usd
     run_dir = where["weekly"] / week / run_name
     summary.update(week=week, run=run_name, batch_status=collected["batch_status"],
                    offers=collected.get("total_saved_offers"))
+    summary.update(missing_chains(collected))
     imported = import_run_fn(run_dir, where["db"], schema_dir)
     summary["offers_imported"] = imported["imported"]
+    summary["offers_reclassified"] = reclassify_fn(where["db"])   # TASK-073: earlier weeks
     if collected.get("halted_reason"):
         raise WeeklyRunError(f"collector halted: {collected['halted_reason']}")
+    summary["pages_skipped_chains"] = quarantined_chains(run_dir)
     pages = run_pages(run_dir, "all")
     if not pages:
         raise WeeklyRunError("the run saved no page images")
@@ -187,6 +208,17 @@ def run_week(root: Path, *, mode: str, collect, catalogue: dict, client, cap_usd
             f"Collector: {collected['batch_status']}; {collected.get('total_saved_offers')} "
             f"offers; mode {mode}; reused {summary['reused']}; paid this run "
             f"{summary['spent_usd']} USD", ""]
+    if summary["chains_missing_count"]:
+        head[-1:-1] = [f"WARNING: no offers saved for {summary['chains_missing']} "
+                       f"({summary['chains_missing_reasons']}); their prices and promotions "
+                       "are missing from this run."]
+    if summary["offers_rejected"]:
+        head[-1:-1] = [f"NOTE: {summary['offers_rejected']} single offer(s) failed validation "
+                       f"and were left out; the rest of each store was kept "
+                       f"({summary['offers_rejected_detail']})."]
+    if summary["pages_skipped_chains"]:
+        head[-1:-1] = [f"WARNING: offers of {', '.join(summary['pages_skipped_chains'])} failed "
+                       "validation (quarantined); their pages were not read."]
     report_file.write_text("\n".join(head + lines) + "\n")
     (out / "review-queue.json").write_text(
         json.dumps(built["review_queue"], indent=1, ensure_ascii=False))

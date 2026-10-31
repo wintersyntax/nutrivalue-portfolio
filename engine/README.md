@@ -15,9 +15,9 @@ This directory contains a curated public snapshot of real NutriValue engineering
 | `src/nutrivalue/sku_nutrition_review.py`, `gtin.py` | Product-identity and nutrition evidence guards |
 | `src/nutrivalue/product_candidates.py` | Offline-only evidence scoring from supplied fictional provider-shaped data |
 | `src/nutrivalue/offer_database.py`, `weekly_pipeline.py` | Versioned weekly imports, completeness and history |
-| `analytics/` | 33 SQL schemas and review/coverage/promotion/history queries |
-| `scripts/` | 45 inspection, review, import, bounded-capture and pilot CLI scripts |
-| `tests/` | 68 selected engineering regression files; check each test's fixtures and optional services |
+| `analytics/` | SQL schemas and review/coverage/promotion/history queries |
+| `scripts/` | Inspection, review, import, bounded-capture and pilot CLI scripts |
+| `tests/` | Selected engineering regression files; check each test's fixtures and optional services |
 | `research/rema_flyer_2026/` | 32 historical OCR and layout experiment programs/tests from W40–W43 |
 | `data/reference/food_roles.json` | Curated generic food-role vocabulary (not a personal inventory) |
 
@@ -40,9 +40,9 @@ PYTHONPATH=engine/src python3 -m unittest discover -s engine/tests -p test_gtin.
 PYTHONPATH=engine/src python3 -m unittest discover -s engine/tests -p test_product_candidates.py -v
 ```
 
-Not all engine tests are portable without their synthetic fixtures, optional dependencies, archived source-capture data and configuration. **Do not infer complete test-suite or live-pipeline health from the presence of test files**. For live/hosted modes, the original build used optional Google Storage and OAuth packages as well as OCR toolchains; this public code is not an out-of-the-box production setup.
+`python3 scripts/check_engine.py` runs the portable collection and reports four private-only exclusions. Not all engine tests are portable without their synthetic fixtures, optional dependencies, archived source-capture data and configuration. **Do not infer complete test-suite or live-pipeline health from the presence of test files**. For live/hosted modes, the original build used optional Google Storage and OAuth packages as well as OCR toolchains; this public code is not an out-of-the-box production setup.
 
-No public run command fetches real offers or opens a live review service. Use separately approved credentials and source permissions, never personal files or secrets committed to Git.
+The safe checks above fetch no offers and connect to no live review service. Use separately approved credentials and source permissions, never personal files or secrets committed to Git.
 
 ## The offer reviewer
 
@@ -62,3 +62,23 @@ No genuine retailer captures, image scans, private historical offer databases, r
 ### Taxonomy v6 and promotion normalization
 
 The published offline engine includes a 140-food generic vocabulary, processed-food and ready-meal safeguards, and a promotion-restatement filter. These algorithms do not establish verified product identities, store prices or measured extraction accuracy.
+
+## Recipe snapshots and nutrition estimates
+
+`src/nutrivalue/mealie_read.py` and `scripts/read_mealie_recipes.py` provide a
+GET-only recipe reader. Its default mode is a no-network plan; live reads need
+an explicit HTTPS base URL and separately supplied credentials. There is no
+bundled PikaPods hostname, recipe library or account configuration.
+`--from-snapshot` verifies supplied hashes and imports locally without requests.
+Generated snapshots and databases belong in ignored `data/private/`.
+
+`recipe_nutrition.py` uses reviewed generic references or user-reported label
+values. Volumes require an explicit density before conversion to grams;
+counts and missing sources stay unresolved. Partial totals are estimates for
+mapped ingredients, not verified complete meals or a meal planner. No writes
+to Mealie, Grocy or task services are implemented by this path.
+
+```sh
+PYTHONPATH=engine:engine/src python3 -m unittest discover -s engine/tests -p test_mealie_read.py -v
+PYTHONPATH=engine:engine/src python3 -m unittest discover -s engine/tests -p test_recipe_nutrition.py -v
+```

@@ -103,6 +103,9 @@ def _time(value, name, *, optional=False):
     return raw
 
 
+FLOAT_NOISE_ORE = Decimal("0.000001")
+
+
 def _money(value, name, *, optional=False):
     if value is None and optional:
         return None
@@ -111,6 +114,13 @@ def _money(value, name, *, optional=False):
     try:
         dec = Decimal(str(value))
         ore = dec * 100
+        if isinstance(value, float) and dec.is_finite():
+            # TASK-078: JSON floats such as 41.900000000000006 are binary noise
+            # around a two-decimal price (W44 KIWI); the raw file keeps the
+            # original. A real third decimal (41.905) is still rejected.
+            nearest = ore.to_integral_value()
+            if abs(ore - nearest) <= FLOAT_NOISE_ORE:
+                ore = nearest
         if not dec.is_finite() or dec <= 0 or ore != ore.to_integral_value():
             raise ValueError
         if ore > 100_000_000:

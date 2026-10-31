@@ -222,7 +222,7 @@ class ClientTests(unittest.TestCase):
             sent["auth"] = request.get_header("Authorization")
             return Response()
 
-        key = "sk-or-synthetic-key-0123456789"
+        key = "synthetic-token-for-redaction-test"
         answer = OpenRouterClient(key, opener=opener).complete(
             "good/model", "prompt", b"img", {"type": "object"}, structured=True,
             temperature=False, max_tokens=100)

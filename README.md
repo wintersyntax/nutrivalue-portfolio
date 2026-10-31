@@ -32,18 +32,19 @@ The engineering challenge is not just fetching prices. A catalogue may show a me
 | Weekly offer history | SQL schemas and queries for imported source-only runs, coverage, promotion monitoring and history | Genuine private/provider data are **not distributed** |
 | Offline product candidate matching | Adapted TASK-069/TASK-070 scoring of supplied NGData/Kassalapp-shaped data, pack and brand comparisons, and nutrition flags | Experimental review aid only: no live lookups, confirmed identities or verified prices |
 | Nutrition and protein economics | Generic nutrition schemas, GTIN guardrails, SKU review, Decimal NOK per protein | No independently verified real current-store price ranking |
-| Meal planning, inventory and approved handoff | Defined, reviewed-first path to versioned recipes, deterministic 3+4-day proposals, package-level shopping, stock snapshots and optional Mealie sync | **Planned**, not shipped; no Grocy, Mealie or TickTick integration is active |
+| Meal planning, inventory and approved handoff | Defined, reviewed-first path to versioned recipes, deterministic 3+4-day proposals, package-level shopping, stock snapshots and optional Mealie sync | GET-only Mealie reader and offline recipe estimates included; planning, Grocy, TickTick and Mealie writes remain future work |
 
 ## Private implementation versus this public release
 
-**Documentation sync: 25 October 2026.** The private NutriValue repository
-runs a source-only weekly nine-chain Tjek offer/promotion pipeline on a
-private Cloud Run job with scheduled collection, and a separate owner-only
-review service. This **public portfolio** includes a reviewed subset of its
-engineering code, not a copy of its deployment, account configuration or
-provider evidence. Selected published modules for weekly collection, offer
-storage, promotion extraction/review, food roles and SQL were checked against
-the private code base on 25 October and were unchanged.
+**Public sync: 31 October 2026.** This curated release adds per-chain weekly
+fallback/health views, invalid-offer isolation and an explicitly configured,
+GET-only Mealie recipe reader plus offline per-serving nutrition estimates.
+PikaPods hosts the separate Mealie recipe application; NutriValue reads
+snapshots into its own local calculation model. No instance address,
+personal recipe, token or deployment configuration is bundled. See the
+[architecture boundaries](docs/ARCHITECTURE_AND_REVIEW.md#recipe-read-model-and-pikapods).
+The private source-only offer pipeline and specialist review service remain
+separate from the reproducible public demo.
 
 The broader NutriValue roadmap is **future work**: a transparent,
 deterministic three-day plus four-day recipe/meal-prep proposal with
@@ -157,9 +158,9 @@ The engine code is intentionally accessible in the repository rather than hidden
 | [engine/src/nutrivalue/offer_database.py](engine/src/nutrivalue/offer_database.py) | Weekly import and source-only persistence |
 | [engine/src/nutrivalue/gtin.py](engine/src/nutrivalue/gtin.py) | Product identifier guardrails |
 | [engine/src/nutrivalue/product_candidates.py](engine/src/nutrivalue/product_candidates.py) | Offline-only candidate parsing and scoring with [synthetic tests](engine/tests/test_product_candidates.py) |
-| [engine/analytics](engine/analytics) | 33 production-oriented SQL schema and analytic source files |
+| [engine/analytics](engine/analytics) | SQL schemas and analytic source files |
 | [engine/research/rema_flyer_2026](engine/research/rema_flyer_2026) | 32 OCR experiments and reference test programs across W40–W43 |
-| [engine/tests](engine/tests) | 68 selected engineering test files across parsing, promotion handling, stores, SQL and identity |
+| [engine/tests](engine/tests) | Selected engineering tests across parsing, promotion handling, stores, SQL and identity |
 
 [Read the source tour and optional dependencies](engine/README.md).
 
@@ -188,7 +189,7 @@ PYTHONPATH=engine/src python3 -m unittest discover -s engine/tests -p test_gtin.
 PYTHONPATH=engine/src python3 -m unittest discover -s engine/tests -p test_product_candidates.py -v
 ```
 
-The full `engine/tests` collection is **not** advertised as entirely standalone: some tests depend on local archived evidence, optional packages or historical experimental fixtures. [Portfolio validation](.github/workflows/portfolio-ci.yml) checks the offline release and selected portable contracts.
+Run `python3 scripts/check_engine.py` for the portable engine suite. It explicitly reports four private-only archive/deployment modules excluded from public validation. [Portfolio validation](.github/workflows/portfolio-ci.yml) checks this suite and the synthetic demo.
 
 ## Data modelling and nutrition-aware value
 
@@ -207,7 +208,7 @@ Price, exact product identity, food form, nutritional basis, store and date all 
 
 Private implementation evidence recorded through 22 October 2026 includes Matvaretabellen imports (one bounded snapshot: **2,121 generic foods, 57 nutrients, 120,197 measurements**) and weekly Tjek offer/photo recovery (a bounded W43 run reported **883 selected source-only offers, 213/213 catalogue pages**). These are **scoped historical engineering figures**, not evidence of nationwide price coverage, independent extraction accuracy or active retail shelf prices.
 
-Three important limitations remain: printed-price OCR needs stronger reference accuracy; real retailer/source payloads cannot simply be redistributed; and verified price-to-exact-SKU-to-nutrition matching is not yet an operational nationwide shopping service. **Versioned recipes, Grocy-backed inventory, deterministic 3+4-day meal planning, an optional later optimizer and approved Mealie handoff remain future NutriValue work.**
+Three important limitations remain: printed-price OCR needs stronger reference accuracy; real retailer/source payloads cannot simply be redistributed; and verified price-to-exact-SKU-to-nutrition matching is not yet an operational nationwide shopping service. **Recipe snapshots and offline nutrition estimates are included; Grocy-backed inventory, deterministic 3+4-day meal planning, an optional later optimizer and approved Mealie writes remain future work.**
 
 ## Privacy, rights and reproducibility
 

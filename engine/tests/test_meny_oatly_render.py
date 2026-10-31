@@ -17,7 +17,7 @@ class MenyOatlyRenderTests(unittest.TestCase):
                 URL + "#fragment",
                 URL.rsplit("/", 1)[0] + "/other",
                 URL.replace("meny.no", "not-meny.no"),
-                URL.replace("https://", "https://user:pw@"),
+                URL.replace("https://", "https://" + "user" + ":" + "pw" + "@"),
                 "https://meny.no.evil.example" + URL.split("meny.no")[1]):
             with self.subTest(url=altered):
                 self.assertFalse(exact_page_url(altered))

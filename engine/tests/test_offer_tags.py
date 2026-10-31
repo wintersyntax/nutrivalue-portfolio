@@ -69,7 +69,8 @@ class OfferTagTests(unittest.TestCase):
     def test_only_category_evidence_is_not_nutrition_evidence(self):
         result = classify_offer('Røkt laks')
         self.assertEqual(result.category_tags, ('fish',))
-        self.assertIsNone(result.food_key)
+        # v5: a processed-food type key is still not nutrition evidence
+        self.assertEqual(result.food_key, 'smoked_salmon')
         self.assertEqual(result.status, 'needs_review')
         hinted = classify_offer('Dagens tilbud', 'Torsk')
         self.assertEqual(hinted.tag_status, 'candidate')

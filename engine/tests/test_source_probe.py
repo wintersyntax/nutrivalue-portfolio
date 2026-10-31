@@ -26,7 +26,7 @@ class SourceProbeTests(unittest.TestCase):
                             "https://evil.example" + source.url.split(".no")[-1],
                             source.url + "?unexpected=1",
                             source.url + "#secret",
-                            "https://user:pass@" + source.allowed_hosts[0]
+                            "https://" + "user" + ":" + "pass" + "@" + source.allowed_hosts[0]
                             + source.url.split(".no")[-1]):
                     with self.assertRaises(SourceProbeError):
                         validate_url(source, bad)

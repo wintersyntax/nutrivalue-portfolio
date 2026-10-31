@@ -26,14 +26,5 @@ jobs:
           python3 scripts/build_demo.py
           python3 scripts/run_reports.py
           python3 -m unittest discover -s tests -v
-      - name: Verify selected standalone engine contracts
-        env:
-          PYTHONPATH: engine/src
-        run: |
-          python3 -m unittest discover -s engine/tests -p test_pricing.py -v
-          python3 -m unittest discover -s engine/tests -p test_gtin.py -v
-          python3 -m unittest discover -s engine/tests -p test_product_candidates.py -v
-          python3 -m unittest discover -s engine/tests -p test_food_roles.py -v
-          python3 -m unittest discover -s engine/tests -p test_offer_categories.py -v
-          python3 -m unittest discover -s engine/tests -p test_page_promotions.py -v
-          python3 -m unittest discover -s engine/tests -p test_public_taxonomy_w44.py -v
+      - name: Verify portable engine contracts (private-only exclusions reported)
+        run: python3 scripts/check_engine.py

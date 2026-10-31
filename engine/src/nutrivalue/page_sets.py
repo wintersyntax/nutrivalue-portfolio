@@ -70,6 +70,15 @@ def _add(data: dict, manifest_path: Path, *, source: Path | bytes, catalog_id: s
                           "sha256": _sha(target), **meta})
 
 
+def quarantined_chains(run_dir: Path) -> list[str]:
+    """TASK-078: chains whose offer file failed validation (``<dealer>.unvalidated``
+    without ``<dealer>.json``). Their page images have no trusted catalogue
+    context, so page reading skips them and the weekly report names them."""
+    run_dir = Path(run_dir)
+    return sorted(p.name.split(".")[0] for p in run_dir.glob("*.unvalidated")
+                  if not (run_dir / f"{p.name.split('.')[0]}.json").exists())
+
+
 def run_pages(run_dir: Path, include: str = "all") -> list[dict]:
     """Page dicts (with path and catalogue context) of a TASK-051 run, in place.
 
@@ -79,8 +88,11 @@ def run_pages(run_dir: Path, include: str = "all") -> list[dict]:
         raise PageSetError("include must be all, hotspot_free or with_hotspots")
     run_dir = Path(run_dir)
     pages = []
+    skipped = set(quarantined_chains(run_dir))
     for pages_file in sorted(run_dir.glob("*.pages.json")):
         dealer = pages_file.name.split(".")[0]
+        if dealer in skipped:
+            continue
         spots_file = run_dir / f"{dealer}.hotspots.json"
         if not spots_file.is_file():
             raise PageSetError(f"{spots_file.name} is required to know hotspot pages")

@@ -124,8 +124,24 @@ FROM (
 )
 WHERE rn = 1;
 
--- One row per offer in each week's selected run, with acquisition,
--- latest-version conditions and categories.
+-- TASK-079: per week and chain, the latest non-halted run in which that chain
+-- saved offers. A later run that lost a chain (quarantine, HTTP error, no
+-- catalogue) no longer hides the chain's earlier offers of the same week.
+DROP VIEW IF EXISTS v_week_chain_run;
+CREATE VIEW v_week_chain_run AS
+SELECT week, dealer_id, chain_name, run_id, status, offers_saved, fetched_at
+FROM (
+  SELECT r.week, rc.dealer_id, rc.chain_name, rc.run_id, rc.status, rc.offers_saved,
+         r.fetched_at,
+         ROW_NUMBER() OVER (PARTITION BY r.week, rc.dealer_id
+                            ORDER BY r.fetched_at DESC, r.run_id DESC) AS rn
+  FROM tjek_runs r JOIN tjek_run_chains rc ON rc.run_id = r.run_id
+  WHERE r.halted_reason IS NULL AND rc.offers_saved > 0 AND rc.snapshot_sha256 IS NOT NULL
+)
+WHERE rn = 1;
+
+-- One row per offer of each week, per chain from v_week_chain_run, with
+-- acquisition, latest-version conditions and categories.
 DROP VIEW IF EXISTS v_week_offers;
 CREATE VIEW v_week_offers AS
 SELECT w.week, w.run_id, rc.chain_name, o.dealer_id, o.catalog_id, o.offer_id,
@@ -140,8 +156,8 @@ SELECT w.week, w.run_id, rc.chain_name, o.dealer_id, o.catalog_id, o.offer_id,
        c.limited_stock, c.review_reasons,
        k.food_category, k.food_key, k.category_tags, k.offer_kind, k.tag_status,
        o.review_state
-FROM v_week_run w
-JOIN tjek_run_chains rc ON rc.run_id = w.run_id
+FROM v_week_chain_run w
+JOIN tjek_run_chains rc ON rc.run_id = w.run_id AND rc.dealer_id = w.dealer_id
 JOIN tjek_offers o ON o.snapshot_sha256 = rc.snapshot_sha256
 LEFT JOIN tjek_offer_acquisition a
   ON a.snapshot_sha256=o.snapshot_sha256 AND a.catalog_id=o.catalog_id AND a.offer_id=o.offer_id
@@ -156,14 +172,16 @@ LEFT JOIN tjek_offer_categories k
                            WHERE k2.snapshot_sha256=o.snapshot_sha256 AND k2.catalog_id=o.catalog_id
                              AND k2.offer_id=o.offer_id);
 
--- Per-week, per-chain coverage of the selected run.
+-- Per-week, per-chain coverage of the run each chain's offers come from.
+-- A chain with no saved offers in the week is absent here; see v_week_chain_health.
 DROP VIEW IF EXISTS v_week_coverage;
 CREATE VIEW v_week_coverage AS
 SELECT w.week, rc.chain_name, rc.status, rc.declared_offers, rc.listing_offers,
        rc.hotspot_offers, rc.detail_recovered, rc.offers_saved, rc.source_count_shortfall,
        CASE WHEN rc.declared_offers > 0
             THEN ROUND(100.0 * rc.offers_saved / rc.declared_offers, 1) END AS coverage_pct
-FROM v_week_run w JOIN tjek_run_chains rc ON rc.run_id = w.run_id;
+FROM v_week_chain_run w
+JOIN tjek_run_chains rc ON rc.run_id = w.run_id AND rc.dealer_id = w.dealer_id;
 
 -- The same provider offer ID across weeks. Tjek issues new offer IDs for
 -- each catalogue, so this mainly links repeated runs and long-running offers.

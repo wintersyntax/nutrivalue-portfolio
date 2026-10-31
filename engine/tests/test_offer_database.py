@@ -10,7 +10,11 @@ import unittest
 from datetime import datetime
 from pathlib import Path
 
-from nutrivalue.offer_database import OfferImportError, discover_runs, import_run
+from dataclasses import replace
+from unittest import mock
+
+from nutrivalue.offer_categories import TAXONOMY_VERSION, classify_offer
+from nutrivalue.offer_database import OfferImportError, discover_runs, import_run, reclassify
 from nutrivalue.providers.tjek_offline import CHAINS
 from nutrivalue.providers.tjek_weekly_collect import collect_week
 
@@ -58,6 +62,22 @@ class Fake:
         raise AssertionError(endpoint)
 
 
+class BadKiwi(Fake):
+    """TASK-079: KIWI offers break validation - one offer (``one``) or all (``all``)."""
+
+    def __init__(self, mode):
+        self.mode = mode
+
+    def __call__(self, endpoint, params):
+        result = super().__call__(endpoint, params)
+        if endpoint.startswith("offers/") and endpoint.endswith("257bxm-o-2"):
+            result["pricing"]["pre_price"] = 41.905           # a real third decimal
+        if self.mode == "all" and endpoint == "offers" and params["catalog_id"] == "c-257bxm":
+            for item in result:
+                item["pricing"]["currency"] = "EUR"
+        return result
+
+
 class OfferDatabaseTests(unittest.TestCase):
     def setUp(self):
         tmp = tempfile.TemporaryDirectory()
@@ -66,8 +86,8 @@ class OfferDatabaseTests(unittest.TestCase):
         self.weekly = self.tmp / "weekly"
         self.db = self.tmp / "offers.sqlite3"
 
-    def run_collector(self, run_id, *, hotspots=True, minute=1, allow_repeat=False):
-        collect_week(as_of=AT, out_dir=self.weekly, get_json=Fake(), run_id=run_id,
+    def run_collector(self, run_id, *, hotspots=True, minute=1, allow_repeat=False, fake=None):
+        collect_week(as_of=AT, out_dir=self.weekly, get_json=fake or Fake(), run_id=run_id,
                      captured_at=datetime.fromisoformat(f"2026-10-15T12:{minute:02d}:00+02:00"),
                      hotspots=hotspots, allow_repeat=allow_repeat)
         return self.weekly / "2026-W42" / f"run-{run_id}"
@@ -101,6 +121,23 @@ class OfferDatabaseTests(unittest.TestCase):
         self.assertEqual(coverage, [(3, 1, 2, 1, 2, 66.7)])
         self.assertTrue(all(r[0] == "source_only" for r in self.query(
             "SELECT DISTINCT review_state FROM v_week_offers")))
+
+    def test_reclassify_adds_current_taxonomy_for_earlier_imports(self):
+        # TASK-073: offers imported under an older taxonomy get the current one
+        # appended; the older rows stay and the view reads the newest version.
+        def older(heading, description=None, grams=None):
+            return replace(classify_offer(heading, description, grams),
+                           taxonomy_version=TAXONOMY_VERSION - 1, food_key=None)
+        with mock.patch("nutrivalue.offer_database.classify_offer", older):
+            import_run(self.run_collector("20261015T120100Z"), self.db, SCHEMAS)
+        self.assertEqual(self.query("SELECT food_key FROM v_week_offers "
+                                    "WHERE offer_id='faa0Ym-o-1'"), [(None,)])
+        self.assertEqual(reclassify(self.db), 18)
+        self.assertEqual(reclassify(self.db), 0)
+        self.assertEqual(self.query("SELECT food_key FROM v_week_offers "
+                                    "WHERE offer_id='faa0Ym-o-1'"), [("chicken_breast",)])
+        self.assertEqual(self.query("SELECT COUNT(*) FROM tjek_offer_categories"), [(36,)])
+        self.assertEqual(reclassify(self.tmp / "absent.sqlite3"), 0)
 
     def test_reimport_is_noop_and_changed_manifest_fails_closed(self):
         run = self.run_collector("20261015T120100Z")
@@ -160,6 +197,49 @@ class OfferDatabaseTests(unittest.TestCase):
         import_run(halted, self.db, SCHEMAS)
         self.assertEqual(self.query("SELECT COUNT(*) FROM tjek_runs"), [(1,)])
         self.assertEqual(self.query("SELECT COUNT(*) FROM v_week_run"), [(0,)])
+
+    def test_one_invalid_offer_is_dropped_and_the_store_kept(self):
+        run = self.run_collector("20261015T120100Z", fake=BadKiwi("one"))
+        manifest = json.loads((run / "manifest.json").read_text())
+        kiwi = next(c for c in manifest["chains"] if c["dealer_id"] == "257bxm")
+        self.assertEqual((kiwi["status"], kiwi["offers_saved"], kiwi["offers_rejected"]),
+                         ("offers_rejected", 1, 1))
+        self.assertIn("max two decimals", kiwi["rejected_reasons"][0])
+        self.assertTrue((run / "257bxm.rejected.json").is_file())
+        self.assertFalse((run / "257bxm.unvalidated").exists())
+        import_run(run, self.db, SCHEMAS)                 # hotspot file stays consistent
+        self.assertEqual(self.query(
+            "SELECT offer_id FROM v_week_offers WHERE dealer_id='257bxm'"), [("257bxm-o-1",)])
+
+    def _health(self):
+        with sqlite3.connect(self.db) as db:
+            db.executescript((SCHEMAS / "promotion_extraction.sql").read_text())
+            return {row[0]: row[1:] for row in db.execute(
+                "SELECT chain_name, offers_light, promotions_light, light "
+                "FROM v_week_chain_health")}
+
+    def test_later_run_without_a_store_keeps_its_earlier_offers_and_turns_amber(self):
+        # TASK-079: W44 Thursday lost KIWI and became the selected run for the week.
+        import_run(self.run_collector("20261015T120100Z"), self.db, SCHEMAS)
+        later = self.run_collector("20261015T120500Z", minute=5, allow_repeat=True,
+                                   fake=BadKiwi("all"))
+        import_run(later, self.db, SCHEMAS)
+        self.assertEqual(self.query("SELECT COUNT(*) FROM v_week_offers"), [(18,)])
+        self.assertEqual(self.query(
+            "SELECT DISTINCT run_id FROM v_week_offers WHERE dealer_id='257bxm'"),
+            [("2026-W42/run-20261015T120100Z",)])
+        health = self._health()
+        self.assertEqual(health["KIWI"][0], "amber")
+        self.assertEqual(health["REMA 1000"][0], "green")
+        self.assertTrue(all(v[1] == "red" for v in health.values()))   # no pages read yet
+
+    def test_store_missing_in_every_run_of_the_week_is_red(self):
+        import_run(self.run_collector("20261015T120100Z", fake=BadKiwi("all")), self.db, SCHEMAS)
+        health = self._health()
+        self.assertEqual((health["KIWI"][0], health["KIWI"][2]), ("red", "red"))
+        self.assertEqual(health["MENY"][0], "green")
+        self.assertEqual(self.query(
+            "SELECT COUNT(*) FROM v_week_offers WHERE dealer_id='257bxm'"), [(0,)])
 
     def test_tables_are_append_only(self):
         import_run(self.run_collector("20261015T120100Z"), self.db, SCHEMAS)

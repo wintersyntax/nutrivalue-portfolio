@@ -290,31 +290,71 @@ def _private_save(folder: Path, filename: str, contents: bytes) -> None:
         stream.write(contents)
 
 
+def _envelope(entries: list[dict], fetched_at: str) -> bytes:
+    return json.dumps({"fetched_at": fetched_at, "entries": entries}, ensure_ascii=False,
+                      sort_keys=True, separators=(",", ":")).encode("utf-8")
+
+
+def _drop_invalid_offers(dealer: str, entries: list[dict], fetched_at: str):
+    """TASK-079: when the whole envelope fails validation, test each offer alone
+    (with its own catalogue) and drop only the offers that fail. Returns
+    (kept entries, rejected [{catalog_id, offer_id, error, offer}]). A catalogue-
+    level problem rejects every offer, which the caller treats as before."""
+    kept, rejected = [], []
+    for entry in entries:
+        good = []
+        for offer in entry["offers"]:
+            probe = _envelope([{"catalog": entry["catalog"], "offers": [offer]}], fetched_at)
+            try:
+                parse_snapshot(probe, f"{dealer}.json")
+                good.append(offer)
+            except TjekSnapshotError as exc:
+                rejected.append({"catalog_id": entry["catalog"].get("id"),
+                                 "offer_id": offer.get("id") if isinstance(offer, dict) else None,
+                                 "error": str(exc), "offer": offer})
+        kept.append({"catalog": entry["catalog"], "offers": good})
+    return kept, rejected
+
+
 def _snapshot(folder: Path, dealer: str, entries: list[dict],
-              *, fetched_at: str) -> tuple[int, str, str]:
+              *, fetched_at: str) -> tuple[int, str, str, list[dict]]:
     # Preserve empty selected catalogues alongside populated ones: hiding them
     # could make TASK-030's saved-source completeness audit look falsely GREEN.
     if not any(entry["offers"] for entry in entries):
-        return 0, "", ""
-    data = {"fetched_at": fetched_at, "entries": entries}
-    raw = json.dumps(data, ensure_ascii=False, sort_keys=True,
-                     separators=(",", ":")).encode("utf-8")
+        return 0, "", "", []
+    raw = _envelope(entries, fetched_at)
     if len(raw) > MAX_FILE_BYTES:
         raise CollectionError("saved chain envelope exceeds TASK-023 size limit")
     filename = f"{dealer}.json"
+    rejected: list[dict] = []
     try:
         snap = parse_snapshot(raw, filename)
-    except TjekSnapshotError as exc:
-        # Keep failed source fields PRIVATE, distinctly named and not eligible
-        # for TASK-023 import, to diagnose a changed upstream schema offline.
-        # Parser errors identify fields/validation rules, not offer contents.
-        quarantine = f"{dealer}.unvalidated"
-        _private_save(folder, quarantine, raw)
-        raise CollectionError(
-            f"TASK-023 source validation rejected {CHAINS[dealer]}: {exc}"
-        ) from exc
+    except TjekSnapshotError as first:
+        snap = None
+        kept, rejected = _drop_invalid_offers(dealer, entries, fetched_at)
+        if rejected and any(e["offers"] for e in kept):
+            try:
+                cleaned = _envelope(kept, fetched_at)
+                snap = parse_snapshot(cleaned, filename)
+            except TjekSnapshotError:
+                snap = None
+        if snap is None:
+            # Keep failed source fields PRIVATE, distinctly named and not eligible
+            # for TASK-023 import, to diagnose a changed upstream schema offline.
+            # Parser errors identify fields/validation rules, not offer contents.
+            quarantine = f"{dealer}.unvalidated"
+            _private_save(folder, quarantine, raw)
+            raise CollectionError(
+                f"TASK-023 source validation rejected {CHAINS[dealer]}: {first}"
+            ) from first
+        raw = cleaned
+    if rejected:
+        _private_save(folder, f"{dealer}.rejected.json", json.dumps({
+            "schema_version": 1, "dealer_id": dealer, "fetched_at": fetched_at,
+            "source_only": True, "offers": rejected,
+        }, ensure_ascii=False, sort_keys=True).encode("utf-8"))
     _private_save(folder, filename, raw)
-    return len(snap.offers), snap.sha256, filename
+    return len(snap.offers), snap.sha256, filename, rejected
 
 
 
@@ -541,9 +581,10 @@ def collect_week(*, as_of: str, out_dir: Path, get_json,
                 problem = str(exc)
                 halted = problem
 
+            rejected = []
             try:
-                count, digest, filename = _snapshot(folder, dealer, entries,
-                                                    fetched_at=fetched_at)
+                count, digest, filename, rejected = _snapshot(folder, dealer, entries,
+                                                              fetched_at=fetched_at)
             except CollectionError as exc:
                 count, digest, filename = 0, "", ""
                 problem = str(exc)
@@ -551,6 +592,13 @@ def collect_week(*, as_of: str, out_dir: Path, get_json,
                 # fetch halts other chains. Local TASK-023 validation failure
                 # is chain-specific; retain quarantine and continue safely.
 
+            if rejected:
+                # The hotspot file must account for exactly the saved offers.
+                dropped = {(r["catalog_id"], r["offer_id"]) for r in rejected}
+                for cat in spot_catalogs:
+                    for key in ("listing_offer_ids", "detail_recovered_ids"):
+                        cat[key] = [o for o in cat[key]
+                                    if (cat["catalog_id"], o) not in dropped]
             spot_file = None
             if spot_catalogs:
                 spot_file = f"{dealer}.hotspots.json"
@@ -606,6 +654,8 @@ def collect_week(*, as_of: str, out_dir: Path, get_json,
                 status = "missing_weekly_catalog"
             elif not count:
                 status = "no_available_offers"
+            elif rejected:
+                status = "offers_rejected"
             elif selection_capped:
                 status = "catalog_selection_capped"
             elif paging_capped:
@@ -620,6 +670,9 @@ def collect_week(*, as_of: str, out_dir: Path, get_json,
                 "source_count_shortfall": shortfall,
                 "snapshot_sha256": digest or None, "snapshot_file": filename or None,
                 "validation_error": problem if problem and not halted else None,
+                "offers_rejected": len(rejected),
+                "rejected_file": f"{dealer}.rejected.json" if rejected else None,
+                "rejected_reasons": sorted({r["error"] for r in rejected}),
                 "quarantine_file": f"{dealer}.unvalidated"
                     if (folder / f"{dealer}.unvalidated").is_file() else None,
             }

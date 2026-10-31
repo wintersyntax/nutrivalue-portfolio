@@ -90,6 +90,18 @@ class TjekOfflineTests(unittest.TestCase):
         with self.assertRaisesRegex(TjekSnapshotError, "outside selected"):
             parse_snapshot(json_bytes([bad]), "snapshot.json")
 
+    def test_float_noise_in_price_is_rounded_but_real_third_decimal_rejected(self):
+        # Synthetic binary-float noise must not invalidate an otherwise exact price.
+        entry = make_entry()
+        entry["offers"][0]["pricing"].update(price=8.1, pre_price=12.340000000000002)
+        row = parse_snapshot(json_bytes([entry]), "snapshot.json").offers[0]
+        self.assertEqual((row[6], row[7]), (810, 1234))
+        for bad in (12.345, 0.0, -1.0, "12.340000000000002"):
+            with self.subTest(pre_price=bad):
+                entry["offers"][0]["pricing"]["pre_price"] = bad
+                with self.assertRaisesRegex(TjekSnapshotError, "max two decimals"):
+                    parse_snapshot(json_bytes([entry]), "snapshot.json")
+
     def test_blank_optional_coop_catalog_label_is_normalized_only(self):
         for blank in ("", "   ", chr(9), None):
             with self.subTest(label=repr(blank)):

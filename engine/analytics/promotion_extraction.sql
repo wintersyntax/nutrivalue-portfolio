@@ -171,14 +171,30 @@ CREATE TRIGGER IF NOT EXISTS page_promotions_no_update
 CREATE TRIGGER IF NOT EXISTS page_promotions_no_delete
   BEFORE DELETE ON page_promotions BEGIN SELECT RAISE(ABORT,'immutable promotion'); END;
 
--- The latest extraction of each week's selected run.
+-- The latest extraction among all runs of each week (TASK-079: a later run
+-- without an extraction no longer hides the week's promotions).
 DROP VIEW IF EXISTS v_week_extraction;
 CREATE VIEW v_week_extraction AS
 SELECT week, run_id, extraction_id, prompt_version, model_a, model_b, imported_at
 FROM (
-  SELECT w.week, e.*, ROW_NUMBER() OVER (PARTITION BY w.week
+  SELECT r.week, e.*, ROW_NUMBER() OVER (PARTITION BY r.week
                                          ORDER BY e.imported_at DESC, e.extraction_id DESC) AS rn
-  FROM v_week_run w JOIN promo_extractions e ON e.run_id = w.run_id
+  FROM promo_extractions e JOIN tjek_runs r ON r.run_id = e.run_id
+)
+WHERE rn = 1;
+
+-- Per week and chain, the latest extraction that read that chain's pages.
+DROP VIEW IF EXISTS v_week_chain_extraction;
+CREATE VIEW v_week_chain_extraction AS
+SELECT week, dealer_id, chain_name, extraction_id, run_id, imported_at
+FROM (
+  SELECT r.week, p.dealer_id, p.chain_name, e.extraction_id, e.run_id, e.imported_at,
+         ROW_NUMBER() OVER (PARTITION BY r.week, p.dealer_id
+                            ORDER BY e.imported_at DESC, e.extraction_id DESC) AS rn
+  FROM promo_extractions e
+  JOIN tjek_runs r ON r.run_id = e.run_id
+  JOIN (SELECT DISTINCT extraction_id, dealer_id, chain_name FROM promo_pages) p
+    ON p.extraction_id = e.extraction_id
 )
 WHERE rn = 1;
 
@@ -202,10 +218,10 @@ SELECT x.week, p.chain_name, p.dealer_id, q.catalog_id, q.page, q.item_no, q.kin
        q.standing_id, q.crosscheck,
        q.reported_by, q.ocr_status, p.valid_from, p.valid_to, p.has_hotspots, q.method,
        x.extraction_id
-FROM v_week_extraction x
+FROM v_week_chain_extraction x
 JOIN page_promotions q ON q.extraction_id = x.extraction_id
 JOIN promo_pages p ON p.extraction_id = q.extraction_id AND p.catalog_id = q.catalog_id
-                  AND p.page = q.page
+                  AND p.page = q.page AND p.dealer_id = x.dealer_id
 LEFT JOIN v_promo_latest_review r
   ON r.extraction_id = q.extraction_id AND r.catalog_id = q.catalog_id AND r.page = q.page
  AND r.item_no = q.item_no;
@@ -215,8 +231,8 @@ DROP VIEW IF EXISTS v_week_promotion_review;
 CREATE VIEW v_week_promotion_review AS
 SELECT x.week, p.chain_name, p.catalog_id, p.page, 'page' AS item, NULL AS item_no,
        'no valid answer from both models' AS reason, x.extraction_id
-FROM v_week_extraction x
-JOIN promo_pages p ON p.extraction_id = x.extraction_id
+FROM v_week_chain_extraction x
+JOIN promo_pages p ON p.extraction_id = x.extraction_id AND p.dealer_id = x.dealer_id
 LEFT JOIN v_promo_latest_review r
   ON r.extraction_id = p.extraction_id AND r.catalog_id = p.catalog_id AND r.page = p.page
  AND r.item_no IS NULL
@@ -234,3 +250,47 @@ SELECT r.week, e.run_id, e.extraction_id, e.pages, e.agreement_rate, e.ocr_confi
        e.superseded_items, e.refuted_items, e.retried_answers, e.invalid_pages_a, e.invalid_pages_b,
        e.item_errors, e.over_price_calls, e.cost_usd, e.imported_at
 FROM promo_extractions e JOIN tjek_runs r ON r.run_id = e.run_id;
+
+-- TASK-079 traffic light per week and chain. red = no offers or no read
+-- promotion pages for the chain in the whole week (the planner must not decide
+-- for that store); amber = data exists but the week's latest run lost or
+-- trimmed the chain (data comes from an earlier run, or single offers were
+-- rejected); green = the latest run has the chain complete. Pages read for a
+-- chain only count when its pages exist in some extraction of the week.
+DROP VIEW IF EXISTS v_week_chain_health;
+CREATE VIEW v_week_chain_health AS
+WITH chains AS (
+  SELECT DISTINCT r.week, rc.dealer_id, rc.chain_name
+  FROM tjek_runs r JOIN tjek_run_chains rc ON rc.run_id = r.run_id
+),
+latest AS (
+  SELECT week, run_id FROM (
+    SELECT week, run_id, ROW_NUMBER() OVER (PARTITION BY week
+                                            ORDER BY fetched_at DESC, run_id DESC) AS rn
+    FROM tjek_runs) WHERE rn = 1
+),
+latest_chain AS (
+  SELECT l.week, rc.dealer_id, rc.status, rc.offers_saved, l.run_id
+  FROM latest l JOIN tjek_run_chains rc ON rc.run_id = l.run_id
+),
+graded AS (
+  SELECT c.week, c.chain_name, c.dealer_id,
+         cr.run_id AS offers_run_id, cr.offers_saved, lc.run_id AS latest_run_id,
+         lc.status AS latest_run_status, ce.extraction_id AS promotions_extraction_id,
+         CASE WHEN cr.run_id IS NULL THEN 'red'
+              WHEN cr.run_id <> lc.run_id OR lc.status IN ('offers_rejected', 'partial_error')
+                THEN 'amber'
+              ELSE 'green' END AS offers_light,
+         CASE WHEN ce.extraction_id IS NULL THEN 'red'
+              WHEN ce.run_id <> lc.run_id THEN 'amber'
+              ELSE 'green' END AS promotions_light
+  FROM chains c
+  LEFT JOIN v_week_chain_run cr ON cr.week = c.week AND cr.dealer_id = c.dealer_id
+  LEFT JOIN latest_chain lc ON lc.week = c.week AND lc.dealer_id = c.dealer_id
+  LEFT JOIN v_week_chain_extraction ce ON ce.week = c.week AND ce.dealer_id = c.dealer_id
+)
+SELECT *,
+       CASE WHEN 'red' IN (offers_light, promotions_light) THEN 'red'
+            WHEN 'amber' IN (offers_light, promotions_light) THEN 'amber'
+            ELSE 'green' END AS light
+FROM graded;

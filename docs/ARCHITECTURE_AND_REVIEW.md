@@ -64,9 +64,51 @@ flowchart TB
   IND -.-> REC -.-> PLAN -.-> MLIST
 ```
 
-**Status:** Source collection, classification, promotion extraction, SQL, local review UI and review-log algorithms exist in the original engineering code. The owner reports a deployed **private** weekly source-only collection job and an authenticated promotion-review service; this public source export includes neither deployment credentials nor provider datasets. NutriValue's general dashboard, recipe planner, Grocy adapter, Mealie handoff and advanced optimization remain **future-only**. Use synthetic fixtures when demonstrating the UI.
+**Status:** Source collection, classification, promotion extraction, SQL, local review UI and review-log algorithms exist in the original engineering code. The owner reports a deployed **private** weekly source-only collection job and an authenticated promotion-review service; this public source export includes neither deployment credentials nor provider datasets. NutriValue's general dashboard, recipe planner, Grocy adapter, Mealie write handoff and advanced optimization remain **future-only**. Use synthetic fixtures when demonstrating the UI.
 
 **Future integration boundary (not deployed):** NutriValue is the **sole product**. An initial deterministic three-day-plus-four-day proposal uses reviewed/versioned recipes, ingredient basis, whole-package pricing and explicit uncertainty. Grocy/Pantry Raider is the intended future authoritative inventory snapshot and stock-movement record; NutriValue must not maintain a second mutable inventory. Mealie can later receive only approved managed recipe/meal/shopping data, while scheduled meals are never evidence of food consumption. An optional soft-preference optimizer waits for independently validated baseline plans and offline failure tests.
+
+## Recipe read model and PikaPods
+
+**Implemented code, public verification with synthetic inputs only (31 October
+2026):** Mealie is a separate recipe application hosted on PikaPods. It owns
+recipe content. NutriValue's explicit GET-only adapter reads recipe revisions,
+hashes saved JSON and imports snapshots into a local SQLite calculation model;
+it does not edit the Mealie library. PikaPods is the hosting layer, not an
+additional nutrition authority or a replacement for NutriValue's offer pipeline.
+
+```mermaid
+flowchart LR
+  M["Mealie on PikaPods: recipe authority"] -->|"Explicit HTTPS GET"| S["Local hashed recipe snapshots"]
+  S --> R["NutriValue SQLite recipe read model"]
+  N["Reviewed generic nutrition or user-reported labels"] --> E["Offline per-serving estimates and gaps"]
+  R --> E
+  G["Grocy on PikaPods: intended inventory authority"] -.->|"Future read adapter"| P["Future deterministic planning"]
+  E -.-> P
+  P -.-> A["Explicitly approved future Mealie handoff"]
+```
+
+Mass units can become grams; volume needs reviewed density, and pieces or
+unparsed ingredients remain gaps. Generic references and user-reported package
+labels retain their evidence classes. Partial totals cover mapped ingredients
+only; missing values do not establish verified complete meal nutrition.
+
+The recipe reader defaults to a no-network plan and has no instance URL.
+A live read requires explicit local configuration and credentials. No live
+account access was performed for this public sync. Grocy's hosting/setup does
+not prove a working NutriValue inventory adapter. Mealie writes, inventory
+transactions, the planner and task/consumption integration remain future work.
+Instance names, personal recipes, pantry data, credentials and hosting
+runbooks are excluded from the public release.
+
+## Weekly coverage resilience
+
+Each chain's latest usable run is selected separately. A later run that loses
+a chain no longer hides that week's earlier offers or extracted promotions.
+Health views expose missing data as red and fallback/partial data as amber.
+Invalid offers are isolated, their rejection is counted, and page processing
+skips chains whose source envelope remains quarantined. These are source-only
+completeness signals, not price verification or a freshness guarantee.
 
 ## How an offer is reviewed
 
