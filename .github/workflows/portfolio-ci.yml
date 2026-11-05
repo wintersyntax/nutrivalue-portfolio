@@ -1,0 +1,30 @@
+name: Public portfolio validation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Source, privacy and demo checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Check tracked-file privacy guard
+        run: python3 scripts/check_public_release.py
+      - name: Compile published Python without network calls
+        run: python3 -m compileall -q src scripts tests engine/src engine/scripts engine/tests engine/research
+      - name: Verify root synthetic demo
+        run: |
+          python3 scripts/build_demo.py
+          python3 scripts/run_reports.py
+          python3 -m unittest discover -s tests -v
+      - name: Verify portable engine contracts (private-only exclusions reported)
+        run: python3 scripts/check_engine.py
